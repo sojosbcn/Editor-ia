@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --font-sans: "Helvetica Neue", Arial, sans-serif;
+  --font-serif: "Georgia", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+:root {
+  --bg-base: #0F0F0F;
+  --bg-panel: #1A1A1A;
+  --bg-surface: #242424;
+  --text-main: #E5E5E5;
+  --text-dim: #A0A0A0;
+  --accent: #D4AF37;
+  --accent-dim: #8B7226;
+  --border: #333333;
+  --success: #4CAF50;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+}
+
+.serif {
+  font-family: var(--font-serif);
+}
+
+.glass-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+}
+
+.message-ai {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border);
+}
+
+.message-user {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+}
