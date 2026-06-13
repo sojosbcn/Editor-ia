@@ -1,127 +1,200 @@
-import { GoogleGenAI } from "@google/genai";
-import { DEPARTMENTS, ProjectPhase, ProjectState } from "../types";
+import { ProjectState } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const model = "gemini-3-flash-preview";
-
-export async function getEditorInChiefResponse(chatHistory: any[], userMessage: string, state: ProjectState) {
-  const systemInstruction = `You are the Editor-in-Chief of an elite AI-integrated editorial agency. 
-Your persona is sophisticated, direct, and hyper-focused on commercial success ("The Golden Rule").
-Your agency has multiple departments: ${Object.values(DEPARTMENTS).join(', ')}.
-
-CRITICAL: YOU MUST RESPOND EXCLUSIVELY IN SPANISH (CASTELLANO). NEVER USE ENGLISH IN YOUR OUTPUT.
-
-Current Project Context:
-Title: ${state.title || 'Sin Título'}
-Phase: ${ProjectPhase[state.currentPhase]}
-Manuscript Status: ${state.manuscript ? 'Borrador Completo' : 'No redactado'}
-
-Instructions:
-1. If the user presents a new concept, acknowledge it from a commercial standpoint and "delegate" it to the initial teams.
-2. Guide the user through the 5 phases of the workflow.
-3. Be professional and authoritative. Use "we" to refer to the agency (always in Spanish: "nosotros").
-4. Keep the "Golden Rule" in mind: We generate stories that sell exceptionally well.
-
-Workflow Phases:
-1. EVALUATION: Revisión de idea inicial y delegación.
-2. DRAFTING: Redacción y humanización.
-3. FIRST_REVIEW: Tu aprobación del manuscrito.
-4. LAYOUT: Ilustraciones y maquetación.
-5. FINAL_MARKET: Estrategia de ventas y aprobación final.`;
-
-  const response = await ai.models.generateContent({
-    model,
-    contents: [
-      ...chatHistory.map(m => ({
-        role: m.role === 'user' ? 'user' : 'model',
-        parts: [{ text: m.content }]
-      })),
-      { role: 'user', parts: [{ text: userMessage }] }
-    ],
-    config: { systemInstruction }
-  });
-
-  return response.text;
+export interface EditorInChiefResult {
+  text: string;
+  groundingChunks: any[] | null;
 }
 
-export async function runEvaluationLoop(concept: string) {
-  const systemInstruction = `You are a group of specialized editorial departments evaluating a concept: ${concept}.
-YOU MUST PROVIDE ALL FEEDBACK AND TEXT IN SPANISH.
-
-Return a JSON object with feedback from three departments:
-1. ${DEPARTMENTS.PROOFREADING}: Structure and tone feedback.
-2. ${DEPARTMENTS.DESIGN}: Visual style proposals.
-3. ${DEPARTMENTS.KDP}: Market strategy and initial sales estimate.
-
-Format: { "reports": [ { "department": "...", "feedback": "...", "status": "approved" } ] }`;
-
-  const response = await ai.models.generateContent({
-    model,
-    contents: [{ role: 'user', parts: [{ text: "Evaluate this concept and provide departmental reports." }] }],
-    config: { 
-      systemInstruction,
-      responseMimeType: "application/json"
-    }
+export async function getEditorInChiefResponse(
+  chatHistory: any[], 
+  userMessage: string, 
+  state: ProjectState,
+  searchGrounding: boolean = false
+): Promise<EditorInChiefResult> {
+  const response = await fetch("/api/editor-in-chief", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ chatHistory, userMessage, state, searchGrounding }),
   });
-
-  return JSON.parse(response.text || '{"reports":[]}').reports;
+  
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.error || "Fallo en la comunicación con el Editor-en-Jefe");
+  }
+  
+  const data = await response.json();
+  return {
+    text: data.text,
+    groundingChunks: data.groundingChunks
+  };
 }
 
-export async function generateManuscript(concept: string, guidelines: string) {
-  const systemInstruction = `You are the ${DEPARTMENTS.REWRITING}. 
-Draft a commercially viable, engaging story based on the concept and guidelines provided. 
-YOU MUST WRITE THE ENTIRE MANUSCRIPT IN SPANISH.
-Use professional literary techniques. 
-Concept: ${concept}
-Guidelines: ${guidelines}`;
-
-  const response = await ai.models.generateContent({
-    model,
-    contents: [{ role: 'user', parts: [{ text: "Write the full manuscript." }] }],
-    config: { systemInstruction }
+export async function runEvaluationLoop(concept: string): Promise<any[]> {
+  const response = await fetch("/api/evaluation", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ concept }),
   });
-
-  return response.text;
+  
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.error || "Fallo en la evaluación inicial de los departamentos");
+  }
+  
+  const data = await response.json();
+  return data.reports;
 }
 
-export async function humanizeText(text: string) {
-  const systemInstruction = `You are the ${DEPARTMENTS.HUMANIZER}. 
-Your task is to rewrite the following text to remove all AI patterns. 
-Ensure it feels 100% organic, human-written, and emotionally resonant. 
-YOU MUST RESPOND EXCLUSIVELY IN SPANISH.
- Avoid robotic transitions and repetitive sentence structures.`;
-
-  const response = await ai.models.generateContent({
-    model,
-    contents: [{ role: 'user', parts: [{ text }] }],
-    config: { systemInstruction }
+export async function generateManuscript(concept: string, guidelines: string): Promise<string> {
+  const response = await fetch("/api/generate-manuscript", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ concept, guidelines }),
   });
-
-  return response.text;
+  
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.error || "Fallo al redactar el manuscrito preliminar");
+  }
+  
+  const data = await response.json();
+  return data.text;
 }
 
-export async function runMarketAnalysis(manuscript: string, concept: string) {
-  const systemInstruction = `You are the ${DEPARTMENTS.MARKET} and ${DEPARTMENTS.SALES}.
-Perform a deep analysis of this project.
-YOU MUST PROVIDE ALL ANALYSES, TRENDS, AND PROMPTS IN SPANISH.
+export async function humanizeText(text: string): Promise<string> {
+  const response = await fetch("/api/humanize", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ text }),
+  });
+  
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.error || "Fallo durante el proceso de humanización de texto");
+  }
+  
+  const data = await response.json();
+  return data.text;
+}
 
-Return a JSON object with:
-- historicalData (5-year trends)
-- currentTrends
-- financialProjections (roi, investmentPlan, rrp)
-- salesStrategy
-- illustrationPrompts (list of detailed prompts)
+export async function runMarketAnalysis(manuscript: string, concept: string): Promise<any> {
+  const response = await fetch("/api/market-analysis", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ manuscript, concept }),
+  });
+  
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.error || "Fallo en la generación de análisis comercial");
+  }
+  
+  const data = await response.json();
+  return data;
+}
 
-Format: { "historicalData": "...", "trends": "...", "roi": "...", "investmentPlan": "...", "rrp": "...", "salesStrategy": "...", "illustrationPrompts": ["...", "..."] }`;
-
-  const response = await ai.models.generateContent({
-    model,
-    contents: [{ role: 'user', parts: [{ text: `Analyze this: ${concept}\n\nManuscript: ${manuscript.slice(0, 2000)}` }] }],
-    config: { 
-      systemInstruction,
-      responseMimeType: "application/json"
-    }
+export async function translateText(text: string, targetLanguage: string): Promise<string> {
+  const response = await fetch("/api/translate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ text, targetLanguage }),
   });
 
-  return JSON.parse(response.text || '{}');
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.error || "Fallo en la traducción adaptativa de localización.");
+  }
+
+  const data = await response.json();
+  return data.text;
 }
+
+export interface PublishResult {
+  success: boolean;
+  platform: string;
+  status: string;
+  realCallStatus: string;
+  publishDate: string;
+  slug: string;
+  publicUrl: string;
+}
+
+export async function publishToCMS(
+  title: string, 
+  content: string, 
+  webhookUrl: string, 
+  platform: string
+): Promise<PublishResult> {
+  const response = await fetch("/api/publish-cms", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ title, content, webhookUrl, platform }),
+  });
+
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.error || "Fallo al conectar con el servidor CMS de publicación masiva.");
+  }
+
+  const data = await response.json();
+  return data;
+}
+
+export interface CorrectionResult {
+  explanation: string;
+  correctedManuscript: string;
+}
+
+export async function submitEditorialCorrection(
+  manuscript: string,
+  errorDescription: string,
+  chatHistory: any[]
+): Promise<CorrectionResult> {
+  const response = await fetch("/api/editorial-correction", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ manuscript, errorDescription, chatHistory }),
+  });
+
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.error || "Fallo en la canalización técnica con la Mesa de Enmiendas.");
+  }
+
+  const data = await response.json();
+  return data;
+}
+
+export async function runEditorialAudit(text: string, agentId: string): Promise<any> {
+  const response = await fetch("/api/editorial-audit", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ text, agentId }),
+  });
+
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.error || "Fallo durante la ejecución de la auditoría.");
+  }
+
+  return response.json();
+}
+
