@@ -27,6 +27,56 @@ const ai = new GoogleGenAI({
 // We prefer gemini-3.5-flash for balanced quick and highly creative text response, as recommended by gemini-api skill guidelines
 const MODEL_NAME = "gemini-3.5-flash";
 
+// Wrapper function to execute Gemini requests with automatic retry and user-friendly error formatting
+async function generateContentWithRetry(params: {
+  model: string;
+  contents: any;
+  config?: any;
+}) {
+  const maxAttempts = 3;
+  let delay = 600; // ms
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await ai.models.generateContent(params);
+    } catch (error: any) {
+      const errMsg = String(error.message || "");
+      const isTransient = 
+        errMsg.includes("503") || 
+        errMsg.includes("UNAVAILABLE") || 
+        errMsg.includes("502") || 
+        errMsg.includes("429") || 
+        errMsg.includes("high demand") || 
+        errMsg.includes("RESOURCE_EXHAUSTED") || 
+        errMsg.includes("rate limit") || 
+        errMsg.includes("overloaded") ||
+        error.status === 503 ||
+        error.status === 429;
+
+      if (isTransient && attempt < maxAttempts) {
+        console.warn(`[Gemini Retry] Intento ${attempt} de ${maxAttempts} fallido debido a alta demanda o saturación temporal de la API (${errMsg.slice(0, 150)}). Esperando ${delay}ms para reintentar...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 2; // exponential backoff
+      } else {
+        console.error(`[Gemini Error] Petición fallida definitivamente.`, error);
+        
+        let friendlyMessage = errMsg;
+        
+        if (errMsg.includes("503") || errMsg.includes("UNAVAILABLE") || errMsg.includes("high demand") || errMsg.includes("overloaded")) {
+          friendlyMessage = "El servidor de lenguaje de Google (Gemini) está experimentando una demanda extremadamente alta en este momento (pico de demanda temporal). Inténtalo de nuevo en unos segundos.";
+        } else if (errMsg.includes("429") || errMsg.includes("RESOURCE_EXHAUSTED") || errMsg.includes("rate limit")) {
+          friendlyMessage = "Se ha superado el límite temporal de peticiones permitido para el servicio de inteligencia editorial. Por favor, realiza la acción de nuevo en unos instantes.";
+        } else if (errMsg.includes("API key not valid")) {
+          friendlyMessage = "La credencial o clave de API configurada no es válida. Por favor, confírmala en la barra de Ajustes.";
+        }
+        
+        throw new Error(friendlyMessage);
+      }
+    }
+  }
+  throw new Error("Error desconocido al ejecutar la petición tras reintentos.");
+}
+
 const DEPARTMENTS = {
   PROOFREADING: 'Equipo de Estilo y Corrección Editorial',
   DESIGN: 'Dirección de Arte y Diseño de Portadas KDP',
@@ -86,7 +136,7 @@ Fases del Flujo de Trabajo:
       config.tools = [{ googleSearch: {} }];
     }
 
-    const response = await ai.models.generateContent({
+    const response = await generateContentWithRetry({
       model: MODEL_NAME,
       contents,
       config
@@ -125,7 +175,7 @@ Devuelve EXCLUSIVAMENTE un objeto JSON puro con la estructura del esquema dado. 
 
 Formato esperado: { "reports": [ { "department": "...", "feedback": "...", "status": "approved" } ] }`;
 
-    const response = await ai.models.generateContent({
+    const response = await generateContentWithRetry({
       model: MODEL_NAME,
       contents: [{ role: 'user', parts: [{ text: `Evaluate this concept and provide departmental reports in raw JSON format.` }] }],
       config: { 
@@ -175,7 +225,7 @@ Use professional literary techniques.
 Concept: ${concept}
 Guidelines: ${guidelines || 'Sigue los estándares editoriales de la agencia.'}`;
 
-    const response = await ai.models.generateContent({
+    const response = await generateContentWithRetry({
       model: MODEL_NAME,
       contents: [{ role: 'user', parts: [{ text: "Escribe el manuscrito literario completo estructurado por capítulos detallados con títulos rítmicos." }] }],
       config: { systemInstruction }
@@ -202,7 +252,7 @@ Ensure it feels 100% organic, human-written, rich in sensory language, and emoti
 YOU MUST RESPOND EXCLUSIVELY IN SPANISH. 
 Avoid robotic transitions, typical clichés, and repetitive sentence structures.`;
 
-    const response = await ai.models.generateContent({
+    const response = await generateContentWithRetry({
       model: MODEL_NAME,
       contents: [{ role: 'user', parts: [{ text }] }],
       config: { systemInstruction }
@@ -239,7 +289,7 @@ El objeto de respuesta JSON debe contener obligatoriamente estos campos en base 
 
 Formato esperado: { "historicalData": "...", "trends": "...", "roi": "...", "investmentPlan": "...", "rrp": "...", "salesStrategy": "...", "illustrationPrompts": ["...", "..."] }`;
 
-    const response = await ai.models.generateContent({
+    const response = await generateContentWithRetry({
       model: MODEL_NAME,
       contents: [{ role: 'user', parts: [{ text: `Analyze this concept: ${concept}\n\nManuscript: ${manuscript.slice(0, 2000)}` }] }],
       config: { 
@@ -295,7 +345,7 @@ Return a JSON with precisely:
 
 Format: { "explanation": "Confirmada la incoherencia física... He modificado el pasaje de Julia para que abra el ventanal antes de llorar, así las lágrimas caen al exterior donde la nube las recoge. He conservado el resto de la obra intacta.", "correctedManuscript": "El texto completo..." }`;
 
-    const response = await ai.models.generateContent({
+    const response = await generateContentWithRetry({
       model: MODEL_NAME,
       contents: [
         {
@@ -537,7 +587,7 @@ app.post("/api/editorial-audit", async (req, res) => {
         return res.status(400).json({ error: "Invalid agentId" });
     }
 
-    const response = await ai.models.generateContent({
+    const response = await generateContentWithRetry({
       model: MODEL_NAME,
       contents: [{ role: 'user', parts: [{ text }] }],
       config: {
@@ -566,7 +616,7 @@ app.post("/api/translate", async (req, res) => {
 Your task is to translate and adapt the provided literary content into ${targetLanguage}.
 CRITICAL: Maintain the exact feeling, rhythm, emotion, tone, and formatting of the story. Ensure it sounds completely natural and professional in the target language.`;
 
-    const response = await ai.models.generateContent({
+    const response = await generateContentWithRetry({
       model: MODEL_NAME,
       contents: [{ role: 'user', parts: [{ text: `Translate this text: \n\n${text}` }] }],
       config: { systemInstruction }

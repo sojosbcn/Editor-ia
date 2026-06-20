@@ -43,6 +43,7 @@ export interface ProjectState {
   currentPhase: ProjectPhase;
   manuscript: string;
   humanizedManuscript: string;
+  originalStory?: string;
   illustrationPrompts: string[];
   marketAnalysis: MarketAnalysis | null;
   departments: DepartmentReport[];

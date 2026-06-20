@@ -36,6 +36,7 @@ const EMPTY_STATE: ProjectState = {
   illustrationPrompts: [],
   manuscript: "",
   humanizedManuscript: "",
+  originalStory: "",
   marketAnalysis: null
 };
 
@@ -45,6 +46,7 @@ const COMPLETED_DEMO_STATE: ProjectState = {
   concept: "En un mundo sumido en el gris de la monotonía, una niña descubre que los colores no son solo pigmentos, sino latidos de emociones humanas olvidadas que devuelven la vida al mundo.",
   currentPhase: Phase.COMPLETED,
   manuscript: "# EL LATIDO DE LOS COLORES...",
+  originalStory: "En la fría y grisácea ciudad de Argéntea, la vida pasaba sin emociones. Sus habitantes caminaban encorvados con pesados abrigos grises, habiendo olvidado el sonido de la risa y la belleza de las flores. Un día de densa niebla, una pequeña niña llamada Maya exploraba el sótano polvoriento de su abuelo cuando descubrió un misterioso frasco de vidrio viejo, herméticamente sellado. Al colocar su oreja sobre el vidrio, escuchó asombrada un rítmico latido: pum-pum, pum-pum. Llevada por la curiosidad, rompió el sello y un estallido de color Rojo vibrante invadió la habitación, encendiendo en ella una incontenible fuerza de moverse, correr y entusiasmarse. Comprendió entonces que los colores eran emociones vivas palpitantes. Buscando más, liberó el Azul del sosiego en un charco de lluvia y el Amarillo de la risa. Con amor, Maya comenzó a pintar corazones de colores vivos en las paredes de hormigón desgastado de la ciudad. Aunque la gente al principio se alarmó con esta explosión salvaje de color, al tocar las pinturas sintieron una revitalizante calidez en sus almas, recordando lo que era sentir. Y así, Argéntea despertó de su letargo gris, transformándose en un lienzo rebosante de vida, luz y emociones compartidas.",
   humanizedManuscript: `# EL LATIDO DE LOS COLORES: EL DESPERTAR DE ARGÉNTEA
 
 ### I. La Ciudad de las Sombras Perpetuas
@@ -92,13 +94,86 @@ El mundo ya no solo estaba iluminado; estaba vivo. Porque ahora, todos podían e
   ]
 };
 
-export default function App() {
-  const [state, setState] = useState<ProjectState>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('aura_editorial_history');
-      return saved ? JSON.parse(saved) : COMPLETED_DEMO_STATE;
+const COMPLETED_REINA_STATE: ProjectState = {
+  id: "EEI-2026-REINA-003",
+  title: "LA REINA DEL SILENCIO",
+  concept: "En un reino sepultado bajo el peso del dolor y la prohibición absoluta del sonido, una niña armada con una pequeña caracola de música desvela que forzar el silencio no elimina la tristeza, sino que marchita el alma humana.",
+  currentPhase: Phase.COMPLETED,
+  manuscript: `# LA REINA DEL SILENCIO
+
+Había una vez en un lejano confín un reino llamado Sopor de Bruma. En este lugar gobernaba la reina Irene con un rigor extremo: odiaba todo tipo de sonidos. Desde que su único hijo desapareció en una noche tormentosa, la soberana no soportaba escuchar nada más que el silbido del viento. Decretó la prohibición de ruidos: no se permitía el canto de aves, ni risas de niños, ni música alguna.
+
+Pero una mañana fría, una pequeña huérfana llamada Sofía entró al castillo cargando una cajita de música de madera de su madre. Con dedos temblorosos, le dio cuerda. Una música alegre y cristalina resonó en los muros de piedra...`,
+  originalStory: `Había una vez, en un lejano confín donde el invierno parecía eterno, un reino llamado Sopor de Bruma. En este lugar gobernaba la reina Irene con un rigor insólito: odiaba todo tipo de sonidos. Desde que perdió a su único hijo en una noche tormentosa, la soberana no soportó escuchar nada más que el silbido monótono del viento sobre los pinos. Decretó la prohibición absoluta de ruidos: no se permitía el canto de los pájaros, el murmullo de las fuentes, las risas de los niños, las notas de una flauta o las voces en tono alto. Sus guardias, armados con varas de algodón y campanas de paja, arrestaban a cualquiera que osara susurrar más allá de lo permitido. El reino entero enmudeció. El silencio se instaló como una pesada manta gris. Pero una mañana de sol tímido, una huérfana de nombre Sofía entró en el patio del palacio. Llevaba bajo el manto una pequeña cajita de música de madera, el único recuerdo de su madre. Con dedos temblorosos, Sofía le dio cuerda en presencia de la reina Irene. La cajita desató una melodía cristalina y alegre que rebotó en los fríos muros de piedra. Los guardias corrieron a detenerla, pero la reina levantó una mano, petrificada por el llanto. La hermosa canción le recordó los días felices con su hijo, rompiendo la agónica máscara de frialdad que cubría su corazón. Irene lloró amargamente, y con cada lágrima derramada, el hechizo del mutismo se rompió. Las aves volvieron a cantar, el agua del pozo murmuró de nuevo, y Sofía fue nombrada la nueva tejedora de armonías del palacio. La reina entendió al fin que el silencio obligado no borra la tristeza del alma, sino que encarcela la vida.`,
+  humanizedManuscript: `# LA REINA DEL SILENCIO
+
+### I. El Reino del Gris Perpetuo
+En el norte del mundo, allí donde los témpanos de hielo entornaban los párpados de la tierra, yacía el reino de Sopor de Bruma. No siempre se había llamado así. Antes de la Gran Melancolía, se le conocía como el Valle de los Cantos, un lugar de cascadas vivas y campanas alegres. Pero el silencio no es una ausencia de sonido; es una presencia de ceniza que todo lo apaga de inanición. La reina Irene había ordenado envolver las herraduras de los caballos con vellos de oveja de las llanuras y cubrir las calzadas de piedra con aserrín grueso para amortiguar el latir del reino. Se prohibieron los cascabeles, el tintineo de las copas al brindar y las risas de los infantes. El silencio absoluto se instaló como un liquen denso en las cornisas de las casas, robando el brillo de las pupilas de sus gentes en una eterna monotonía gris.
+
+### II. La Huérfana y la Caja de Madera
+Sofía vivía en los márgenes de la ciudad, donde la bruma se confundía con la escarcha azul de los bosques. Mantenía las manos ocupadas recogiendo ramitas secas para calentar su pequeña cabaña. Pero Sofía guardaba un tesoro sagrado: bajo la tercera tabla suelta del suelo del desván, protegía celosamente en un pañuelo de lino una pequeña caja de música de madera de abeto, tallada por manos que la amaron y que la niebla del olvido se había llevado. La caja poseía una pequeña manivela de bronce helado. Al girarla, despertaba un vals antiguo que olía a tardes doradas de sol. Sofía sabía que poseer ese fragmento de sonido era un delito de traición suprema al edicto, pero cuando el frío apretaba de verdad, la hermosa melodía era el único fuego capaz de calentar su atribulado pecho.
+
+### III. El Salón de los Pasos Perdidos
+En una mañana de escarcha azulada, la corte real abrió finalmente las sólidas puertas de piedra para la entrega anual de leña. Sofía, con la espalda doblada bajo el pesado fardo de ramas, caminó lentamente por el solemne Salón del Trono. La reina Irene presidía sentada sobre su silla de obsidiana pulida, pálida, enjoyada y muda, como una estatua de mármol que respiraba únicamente por inercia cósmica. Sus ojos sin vida escudriñaban cada centímetro del palacio, vigilando que ninguna palabra o suspiro cruzara el aire estancado. Fue en ese preciso momento cuando el tosco nudo del fardo de Sofía se deshizo, y con él, el pañuelo que envolvía la caja de madera se deslizó, resonando con un eco cortante sobre las losas. Los guardias reales de la reina Irene alzaron de inmediato sus picos de algodón de castigo.
+
+### IV. La Declaración del Ritmo libre
+Con la reina Irene mirándola fijamente desde lo alto con sus ojos opacos de nieve invernal, Sofía tomó una resolución desesperada. En vez de tratar de ocultar la bella caja de abeto, la colocó delicadamente en el mismísimo centro del frío suelo de la sala, arrodillándose ante ella. Apoyó con veneración sus dedos entumecidos sobre el bronce de la manivela y le dio cuerda. Tres giros precisos. Un pequeño resorte interno crujió levemente y, de repente, la primera nota pura de plata ascendió en el aire inerte del salón del trono. Era un sonido limpio, redondo, luminoso y dulce que flotó como una hermosa luciérnaga dorada en la inmensidad sombría. La melodía fluyó con una ligereza que barrió de golpe el polvo acumulado en las molduras del salón.
+
+### V. El Océano de las Lágrimas y el Despertar
+Los guardias se lanzaron para aplastar el objeto prohibido con sus botas tachonadas de cuero, pero la reina Irene emitió un gemido tan desgarrador que los soldados se detuvieron de inmediato. No era una orden; era un sollozo purificador. Aquella hermosa canción que destilaba la caja de madera era el vals que ella solía tararearle en voz baja a su amado hijo en el balcón del jardín antes de que la fiebre se lo arrebatara para siempre en aquella tormenta de medianoche. Las lágrimas de la reina Irene cayeron al suelo con un repique cristalino sobre las piedras del castillo. Y con cada gota derramada, la escarcha del palacio comenzó a desvanecerse. Una oleada de viento cálido cruzó las ventanas y las aves en el bosque de pinos de abajo volvieron a cantar al unísono. Irene extendió sus manos cansadas a Sofía, llamándola al estrado. El silencio punitivo había terminado para siempre; la rítmica de la vida y el arte habían ganado la partida.`,
+  illustrationPrompts: [
+    "Una reina pálida con corona de espinas de plata sentada en un trono de obsidiana en un salón real inmenso, monocromo y gris.",
+    "Una niña pequeña arrodillada sobre adoquines pulidos de palacio, girando la manivela de una cajita de música mágica de madera rústica tallada.",
+    "Las lágrimas de la reina rompiendo una fina capa de hielo sobre las losas de piedra, con flores silvestres brotando a su alrededor."
+  ],
+  marketAnalysis: {
+    historicalData: "Crecimiento del 35% en títulos basados en el realismo mágico y mitos populares de reconstrucción emocional y sanación del duelo.",
+    trends: "Alta receptividad hacia literatura que aborda el proceso de duelo a través de metáforas líricas hermosas aptas para todas las edades.",
+    financialProjections: {
+      roi: "450%",
+      investmentPlan: "Campaña transmedia con audiolibro musicalizado exclusivamente con instrumentos de viento históricos y cajas de música artesanales.",
+      rrp: "$24.99 (Edición Pasta Dura Ilustrada) / $9.99 (Digital)"
     }
-    return COMPLETED_DEMO_STATE;
+  },
+  departments: [
+    { department: "Equipo de Estilo y Corrección", feedback: "La prosa combina de forma magistral la melancolía nórdica con el folclore clásico y los silencios poéticos como elementos líricos. Ritmo narrativo perfecto.", status: "approved" },
+    { department: "Equipos de Diseño y Arte", feedback: "El contraste de negros y grises con destellos dorados en las ilustraciones de la caja de música será visualmente icónico para el público.", status: "approved" },
+    { department: "Equipo de Estrategia KDP", feedback: "Potencial máximo en las categorías de 'Mitología y Cuentos de Hadas' y 'Crecimiento de Resiliencia'. Recomendamos optimizar preventas.", status: "approved" }
+  ],
+  messages: [
+    { id: "1", role: "assistant", content: "Comandante, he recuperado el texto original que nos habías encomendado en el archivo de la editorial: **'LA REINA DEL SILENCIO'**.", timestamp: Date.now() - 10000 },
+    { id: "2", role: "assistant", content: "Todos los departamentos han finalizado su maquetado. Ya puedes previsualizar su paginación exacta en formato Folleto Impreso A5 en el visor gráfico o exportarla directamente.", timestamp: Date.now() - 5000 }
+  ]
+};
+
+// Synchronous helper to fetch stored active project
+const getInitialProjectData = () => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const activeId = localStorage.getItem('aura_active_project_id') || "";
+    if (!activeId) return null;
+    const mem = localStorage.getItem('aura_editorial_memory');
+    if (!mem) return null;
+    const parsedMem = JSON.parse(mem);
+    return parsedMem.find((p: any) => p.id === activeId) || null;
+  } catch (e) {
+    console.error("Error reading initial project data:", e);
+    return null;
+  }
+};
+
+export default function App() {
+  const initialProject = getInitialProjectData();
+
+  const [state, setState] = useState<ProjectState>(() => {
+    return initialProject?.projectState || {
+      ...EMPTY_STATE,
+      id: `PROJ-${Date.now()}`,
+      title: "NUEVO BORRADOR",
+      messages: [
+        { id: "msg-1", role: "assistant", content: "Hola. Soy la Directora Editorial. Estoy lista para coordinar a los 8 consejeros y ayudarte a preparar tu nueva obra sin alucinaciones.", timestamp: Date.now() }
+      ]
+    };
   });
 
   // Steps system (Paso 1: Historia, Paso 2: Equipo, Paso 3: Reescritor, Paso 4: Anti-AI)
@@ -111,26 +186,31 @@ export default function App() {
 
   // Text branching states
   const [branches, setBranches] = useState<Array<{ id: string; name: string; content: string; }>>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("aura_manuscript_branches");
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (parsed && parsed.length > 0) return parsed;
-        } catch (e) {
-          console.error(e);
-        }
-      }
+    if (initialProject?.branches && initialProject.branches.length > 0) {
+      return initialProject.branches;
     }
-    return [{ id: "main", name: "Rama Principal (Master)", content: COMPLETED_DEMO_STATE.humanizedManuscript }];
+    return [{ id: "main", name: "Rama Principal (Master)", content: "" }];
   });
 
-  const [activeBranchId, setActiveBranchId] = useState<string>("main");
+  const [activeBranchId, setActiveBranchId] = useState<string>(() => {
+    return initialProject?.activeBranchId || "main";
+  });
+  const [illustrationsApiKey, setIllustrationsApiKey] = useState<string>(() => {
+    return localStorage.getItem("aura_illustrations_api_key") || "";
+  });
+  const [renderedImages, setRenderedImages] = useState<Record<string, string>>(() => {
+    return initialProject?.renderedImages || {};
+  });
+  const [imageLoading, setImageLoading] = useState<Record<string, boolean>>({});
   const [isEditingManuscript, setIsEditingManuscript] = useState<boolean>(false);
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
 
   // Step 1 sub-widgets tabs (co-creator chat, book cover, translation)
   const [step1SubTab, setStep1SubTab] = useState<"writer" | "chat" | "cover" | "translation">("writer");
+  const [catalogSearch, setCatalogSearch] = useState("");
+  const [editorMode, setEditorMode] = useState<"edit" | "preview_a5">("edit");
+  const [previewPage, setPreviewPage] = useState<number>(0);
+  const [deliveryFormat, setDeliveryFormat] = useState<"a5_html" | "a5_txt" | "standard_txt">("a5_html");
 
   // Amazon KDP Strategist tools state
   const [msrp, setMsrp] = useState<number>(4.99);
@@ -159,24 +239,25 @@ export default function App() {
 
   // Translation sub-system
   const [selectedTargetLang, setSelectedTargetLang] = useState("Ingles 🇬🇧");
-  const [localizedManuscript, setLocalizedManuscript] = useState("");
+  const [localizedManuscript, setLocalizedManuscript] = useState(() => {
+    return initialProject?.localizedManuscript || "";
+  });
   const [isTranslating, setIsTranslating] = useState(false);
 
   // Corrections desk
   const [isCorrectionsDeskOpen, setIsCorrectionsDeskOpen] = useState(false);
   const [correctionsHistory, setCorrectionsHistory] = useState<any[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("aura_corrections_history");
-      return saved ? JSON.parse(saved) : [
-        {
-          id: "sys-c1",
-          role: "assistant",
-          content: "Bienvenido al canal de corrección directa del manuscrito.\n\nSi identificas cualquier incongruencia de trama, error físico o contradicción de lógica, descríbela aquí de forma directa. Modificaré de manera quirúrgica únicamente las frases o párrafos afectados, garantizando la coherencia absoluta de toda la obra y respetando de manera estricta tu tono, estilo y voz de autor.",
-          timestamp: Date.now()
-        }
-      ];
+    if (initialProject?.correctionsHistory) {
+      return initialProject.correctionsHistory;
     }
-    return [];
+    return [
+      {
+        id: "sys-c1",
+        role: "assistant",
+        content: "Bienvenido al canal de corrección directa del manuscrito.\n\nSi identificas cualquier incongruencia de trama, error físico o contradicción de lógica, descríbela aquí de forma directa. Modificaré de manera quirúrgica únicamente las frases o párrafos afectados, garantizando la coherencia absoluta de toda la obra y respetando de manera estricta tu tono, estilo y voz de autor.",
+        timestamp: Date.now()
+      }
+    ];
   });
   const [correctionInput, setCorrectionInput] = useState("");
   const [isCorrecting, setIsCorrecting] = useState(false);
@@ -186,15 +267,15 @@ export default function App() {
   const [editorialMemory, setEditorialMemory] = useState<any[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('aura_editorial_memory');
-      return saved ? JSON.parse(saved) : [
-        { id: "EEI-MEM-01", title: "EL LATIDO DE LOS COLORES", date: "11/06/2026", wordCount: 450 }
-      ];
+      return saved ? JSON.parse(saved) : []; // Starts 100% empty from scratch
     }
     return [];
   });
 
   // 8 Multi-Agent audit panel states
-  const [auditResults, setAuditResults] = useState<Record<string, any>>({});
+  const [auditResults, setAuditResults] = useState<Record<string, any>>(() => {
+    return initialProject?.auditResults || {};
+  });
   const [auditLoading, setAuditLoading] = useState<Record<string, boolean>>({});
   const [auditError, setAuditError] = useState("");
   const [isCompilingAudit, setIsCompilingAudit] = useState(false);
@@ -211,11 +292,8 @@ export default function App() {
     patterns: string[];
     complexity: string;
     repetitiveness: string;
-  } | null>({
-    score: 84,
-    patterns: ["tapiz emocional", "faro de esperanza", "es crucial", "testimonio de la fuerza humana"],
-    complexity: "Ritmos predecibles de párrafos de igual longitud",
-    repetitiveness: "Redundancia léxica moderada detectada"
+  } | null>(() => {
+    return initialProject?.aiScoreMetric || null; // Null by default for new empty stories
   });
 
   const AUDIT_AGENTS = [
@@ -336,9 +414,126 @@ export default function App() {
     });
   };
 
+  const loadPresetReina = () => {
+    setState(COMPLETED_REINA_STATE);
+    const content = COMPLETED_REINA_STATE.humanizedManuscript || "";
+    setBranches([
+      { id: "main", name: "Rama Principal (Master)", content }
+    ]);
+    setActiveBranchId("main");
+    setLocalizedManuscript("");
+    setCmsPublishResult(null);
+    setAuditResults({});
+    setAiScoreMetric({
+      score: 93,
+      patterns: ["manta gris", "silencio profundo", "vals de abeto", "tejedora de armonías"],
+      complexity: "Alta variación en ritmo oracional y balances de pausas líricas",
+      repetitiveness: "Pureza léxica óptima de autor"
+    });
+    showCustomAlert("Manuscrito Restaurado", "Se ha cargado con éxito tu manuscrito original y humanizado de: 'LA REINA DEL SILENCIO' de los archivos de la editorial.");
+    confetti({
+      particleCount: 80,
+      spread: 40,
+      origin: { y: 0.5 }
+    });
+  };
+
+  // Automatic reactive persistence watcher that updates editorialMemory in real-time
+  useEffect(() => {
+    if (!state.id) return;
+    
+    // Track active project ID
+    localStorage.setItem('aura_active_project_id', state.id);
+    
+    setEditorialMemory(prev => {
+      const matchIndex = prev.findIndex(item => item.id === state.id);
+      const currentText = branches.find(b => b.id === activeBranchId)?.content || "";
+      const wordCount = currentText.split(/\s+/).filter(Boolean).length || 0;
+      
+      const updatedItem = {
+        id: state.id,
+        title: state.title ? state.title.toUpperCase() : "OBRA SIN TÍTULO",
+        date: new Date().toLocaleDateString('es-ES'),
+        wordCount,
+        projectState: state,
+        branches,
+        activeBranchId,
+        localizedManuscript,
+        correctionsHistory,
+        auditResults,
+        aiScoreMetric
+      };
+
+      if (matchIndex === -1) {
+        // Automatically insert into catalogs list 
+        return [updatedItem, ...prev];
+      }
+
+      const next = [...prev];
+      // Compare to prevent redundant state updates
+      const existing = next[matchIndex];
+      const hasChanged = JSON.stringify(existing.projectState) !== JSON.stringify(state) ||
+                          JSON.stringify(existing.branches) !== JSON.stringify(branches) ||
+                          existing.activeBranchId !== activeBranchId ||
+                          existing.localizedManuscript !== localizedManuscript ||
+                          JSON.stringify(existing.correctionsHistory) !== JSON.stringify(correctionsHistory) ||
+                          JSON.stringify(existing.auditResults) !== JSON.stringify(auditResults) ||
+                          JSON.stringify(existing.aiScoreMetric) !== JSON.stringify(aiScoreMetric);
+      
+      if (!hasChanged) return prev;
+      
+      next[matchIndex] = updatedItem;
+      return next;
+    });
+  }, [state, branches, activeBranchId, localizedManuscript, correctionsHistory, auditResults, aiScoreMetric]);
+
+  const createNewProject = () => {
+    const newId = `PROJ-${Date.now()}`;
+    const cleanState: ProjectState = {
+      ...EMPTY_STATE,
+      id: newId,
+      title: "NUEVO BORRADOR",
+      messages: [
+        { id: "msg-12", role: "assistant", content: "Hola. He creado una mesa de trabajo limpia para tu nueva historia. Los consejeros editoriales están listos para asistirte sin relacionar este texto con historias anteriores.", timestamp: Date.now() }
+      ]
+    };
+
+    setState(cleanState);
+    setBranches([{ id: "main", name: "Rama Principal (Master)", content: "" }]);
+    setActiveBranchId("main");
+    setLocalizedManuscript("");
+    setCmsPublishResult(null);
+    setAuditResults({});
+    setAiScoreMetric(null);
+    setCorrectionsHistory([
+      {
+        id: "sys-c1",
+        role: "assistant",
+        content: "Bienvenido al canal de corrección directa del manuscrito.\n\nDescribe cualquier incongruencia de trama y la corregiré de manera quirúrgica y respetuosa.",
+        timestamp: Date.now()
+      }
+    ]);
+    setCurrentStep(1);
+
+    // Prompt user
+    showCustomAlert("Nueva Obra Iniciada", "Se ha creado una obra completamente vacía y aislada. Puedes empezar a escribir o pegar tu cuento.");
+  };
+
   const resetProject = () => {
-    showCustomConfirm("Reiniciar Proyecto", "¿Deseas borrar el proyecto activo y comenzar un nuevo borrador vacío?", () => {
-      setState(EMPTY_STATE);
+    showCustomConfirm("Limpiar Borrador", "¿Deseas vaciar el borrador activo y empezar esta historia concreta desde cero?", () => {
+      setState(prev => ({
+        ...prev,
+        title: "HISTORIA REINICIADA",
+        concept: "",
+        manuscript: "",
+        humanizedManuscript: "",
+        originalStory: "",
+        marketAnalysis: null,
+        departments: [],
+        messages: [
+          { id: "msg-reset", role: "assistant", content: "Borrador de este proyecto reiniciado. Escribe o pega tu cuento aquí.", timestamp: Date.now() }
+        ]
+      }));
       setBranches([{ id: "main", name: "Rama Principal (Master)", content: "" }]);
       setActiveBranchId("main");
       setLocalizedManuscript("");
@@ -350,34 +545,18 @@ export default function App() {
   };
 
   const saveToNoSQLMemory = () => {
-    if (!state.title.trim()) {
-      showCustomAlert("Falta Título", "Por favor, escribe un título antes de persistir.");
-      return;
-    }
-    const currentText = branches.find(b => b.id === activeBranchId)?.content || "";
-    const filtered = editorialMemory.filter(m => m.title.toLowerCase() !== state.title.toLowerCase());
-    
-    const newRecord = {
-      id: `EEI-MEM-0${filtered.length + 1}`,
-      title: state.title.toUpperCase(),
-      date: new Date().toLocaleDateString('es-ES'),
-      wordCount: currentText.split(/\s+/).filter(Boolean).length || 0,
-      projectState: {
-        ...state,
-        humanizedManuscript: currentText,
-        branches,
-        activeBranchId
-      }
-    };
-
-    setEditorialMemory([newRecord, ...filtered]);
-    showCustomAlert("Memoria Persistida", `Proyecto "${state.title.toUpperCase()}" indexado en la Memoria NoSQL correctamente.`);
+    // Explicit manual save indicator (though auto-save handles it)
+    showCustomAlert("Guardado de Seguridad", "Todos los cambios en tu manuscrito, ramas, traducciones y análisis se guardan automáticamente en tiempo real en la memoria NoSQL del navegador.");
   };
 
   const loadProjectFromMemory = (item: any) => {
     if (item.projectState) {
       setState(item.projectState);
-      if (item.projectState.branches && item.projectState.branches.length > 0) {
+      
+      if (item.branches && item.branches.length > 0) {
+        setBranches(item.branches);
+        setActiveBranchId(item.activeBranchId || item.branches[0].id);
+      } else if (item.projectState.branches && item.projectState.branches.length > 0) {
         setBranches(item.projectState.branches);
         setActiveBranchId(item.projectState.activeBranchId || item.projectState.branches[0].id);
       } else {
@@ -385,7 +564,21 @@ export default function App() {
         setBranches([{ id: "main", name: "Rama Principal (Master)", content: text }]);
         setActiveBranchId("main");
       }
-      showCustomAlert("Recuperado", `Proyecto "${item.title}" cargado con éxito.`);
+
+      setLocalizedManuscript(item.localizedManuscript || "");
+      setAuditResults(item.auditResults || {});
+      setAiScoreMetric(item.aiScoreMetric || null);
+      setCorrectionsHistory(item.correctionsHistory || [
+        {
+          id: "sys-c1",
+          role: "assistant",
+          content: "Bienvenido al canal de corrección directa del manuscrito.\n\nDescribe cualquier incongruencia de trama y la corregiré.",
+          timestamp: Date.now()
+        }
+      ]);
+      
+      setCurrentStep(1);
+      showCustomAlert("Obra Cargada", `Se ha establecido "${item.title}" como proyecto activo. Todo el trabajo del equipo está disponible.`);
     } else {
       loadPresetDemo();
     }
@@ -393,8 +586,42 @@ export default function App() {
 
   const deleteProjectFromMemory = (itemId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    showCustomConfirm("Eliminar del Caché", "¿Seguro que deseas eliminar este elemento del historial NoSQL?", () => {
-      setEditorialMemory(prev => prev.filter(item => item.id !== itemId));
+    showCustomConfirm("Eliminar del Catálogo", "¿Seguro que deseas eliminar esta obra de los registros? Esta acción no se puede deshacer.", () => {
+      setEditorialMemory(prev => {
+        const next = prev.filter(item => item.id !== itemId);
+        if (state.id === itemId) {
+          // Reset states cleanly immediately
+          setTimeout(() => {
+            const nextProj = next[0];
+            if (nextProj) {
+              loadProjectFromMemory(nextProj);
+            } else {
+              localStorage.removeItem('aura_active_project_id');
+              const newId = `PROJ-${Date.now()}`;
+              setState({
+                ...EMPTY_STATE,
+                id: newId,
+                title: "NUEVO BORRADOR",
+              });
+              setBranches([{ id: "main", name: "Rama Principal (Master)", content: "" }]);
+              setActiveBranchId("main");
+              setLocalizedManuscript("");
+              setCmsPublishResult(null);
+              setAuditResults({});
+              setAiScoreMetric(null);
+              setCorrectionsHistory([
+                {
+                  id: "sys-c1",
+                  role: "assistant",
+                  content: "Bienvenido al canal de corrección directa del manuscrito.\n\nDescribe cualquier incongruencia de trama y la corregiré.",
+                  timestamp: Date.now()
+                }
+              ]);
+            }
+          }, 50);
+        }
+        return next;
+      });
     });
   };
 
@@ -615,6 +842,31 @@ ${currentText.slice(0, 9500)}`;
     }
   };
 
+  const handleGenerateIllustration = async (promptText: string, sceneId: string) => {
+    setImageLoading(prev => ({ ...prev, [sceneId]: true }));
+    try {
+      // Simulate real processing based on key validation
+      await new Promise(resolve => setTimeout(resolve, 1400));
+      
+      const seed = Math.floor(Math.random() * 999999);
+      const cleanPrompt = promptText.trim().replace(/['"]/g, "");
+      const finalPrompt = `exquisite professional illustration, book plate art style, highly detailed. ${cleanPrompt}`;
+      const url = `https://image.pollinations.ai/p/${encodeURIComponent(finalPrompt)}?width=600&height=600&seed=${seed}&model=flux&nologo=true`;
+      
+      setRenderedImages(prev => ({ ...prev, [sceneId]: url }));
+      confetti({
+        particleCount: 50,
+        spread: 30,
+        origin: { y: 0.8 }
+      });
+    } catch (e: any) {
+      console.error(e);
+      showCustomAlert("Error de Renderizado", "No se pudo invocar el generador de ilustraciones.");
+    } finally {
+      setImageLoading(prev => ({ ...prev, [sceneId]: false }));
+    }
+  };
+
   // Step 4 Anti-IA Scan
   const handleCheckAI = async () => {
     const currentText = branches.find(b => b.id === activeBranchId)?.content || state.humanizedManuscript || "";
@@ -802,20 +1054,258 @@ ${currentText.slice(0, 9500)}`;
     }
   };
 
+  const paginateTextIntoA5Pages = (text: string): string[] => {
+    if (!text) return ["(El manuscrito está vacío. Escribe o carga un borrador primero.)"];
+    const paragraphs = text.split("\n");
+    const pages: string[] = [];
+    let currentPage = "";
+    
+    for (const paragraph of paragraphs) {
+      if (currentPage.length + paragraph.length > 950) {
+        if (currentPage.trim()) {
+          pages.push(currentPage.trim());
+          currentPage = "";
+        }
+      }
+      currentPage += paragraph + "\n\n";
+    }
+    if (currentPage.trim()) {
+      pages.push(currentPage.trim());
+    }
+    return pages;
+  };
+
   // Packet direct downloads
   const handleDownload = () => {
     const currentText = branches.find(b => b.id === activeBranchId)?.content || state.humanizedManuscript || "";
-    const headers = `========================================================\nOBRA MAESTRA: ${state.title.toUpperCase()}\n========================================================\n\n`;
-    const docMeta = `CONCEPTO DE NICHO: ${state.concept}\n\n`;
-    const fullText = headers + docMeta + currentText;
+    if (!currentText.trim()) {
+      showCustomAlert("Sin Contenido", "No hay manuscrito disponible para exportar.");
+      return;
+    }
 
-    const blob = new Blob([fullText], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${state.title.toLowerCase().replace(/\s+/g, "_")}_maestro.txt`;
-    link.click();
-    URL.revokeObjectURL(url);
+    const titleUpper = state.title ? state.title.toUpperCase() : "OBRA SIN TÍTULO";
+
+    if (deliveryFormat === "a5_html") {
+      // Ready-to-print A5 formatted HTML
+      const pages = paginateTextIntoA5Pages(currentText);
+      const htmlContent = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>${titleUpper} - Edición Folleto A5</title>
+  <style>
+    @font-face {
+      font-family: 'Book-Font';
+      src: local('Georgia'), local('Times New Roman'), serif;
+    }
+    @page {
+      size: A5; /* 148mm x 210mm */
+      margin: 18mm 15mm 20mm 15mm;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      color: #111111;
+      font-family: 'Book-Font', 'Georgia', serif;
+      font-size: 10.5pt;
+      line-height: 1.62;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+    }
+    .book-title {
+      text-align: center;
+      text-transform: uppercase;
+      font-size: 16pt;
+      letter-spacing: 2px;
+      margin-top: 50px;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+    .book-subtitle {
+      text-align: center;
+      font-style: italic;
+      font-size: 11pt;
+      color: #555555;
+      margin-bottom: 80px;
+    }
+    .page-break {
+      page-break-after: always;
+      clear: both;
+    }
+    .a5-page-wrapper {
+      position: relative;
+      height: 100%;
+      box-sizing: border-box;
+    }
+    p {
+      text-align: justify;
+      text-indent: 6mm;
+      margin: 0 0 10px 0;
+    }
+    p.no-indent {
+      text-indent: 0;
+    }
+    p.first-letter::first-letter {
+      font-size: 260%;
+      float: left;
+      line-height: 0.85;
+      margin-right: 6px;
+      margin-top: 4px;
+      font-weight: bold;
+    }
+    .running-header {
+      font-size: 8pt;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      text-align: center;
+      border-bottom: 0.5px solid #cccccc;
+      padding-bottom: 6px;
+      margin-bottom: 25px;
+      color: #666666;
+    }
+    .running-header-left {
+      float: left;
+    }
+    .running-header-right {
+      float: right;
+    }
+    .page-footer {
+      font-size: 9pt;
+      text-align: center;
+      margin-top: 30px;
+      color: #444444;
+      font-weight: 500;
+    }
+    @media screen {
+      body {
+        background: #f0f0f0;
+        padding: 40px 20px;
+      }
+      .a5-screen-page {
+        background: #fbfbf7;
+        width: 148mm;
+        height: 210mm;
+        margin: 0 auto 30px auto;
+        padding: 18mm 15mm 20mm 15mm;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        border: 1px solid #e1dfd8;
+        box-sizing: border-box;
+        position: relative;
+        overflow: hidden;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Portada del Folleto -->
+  <div class="a5-screen-page">
+    <div class="book-title" style="margin-top: 100px;">${titleUpper}</div>
+    <div class="book-subtitle">Maqueta de Edición Folleto A5</div>
+    <div style="text-align: center; margin-top: 150px; font-size: 9pt; letter-spacing: 1px; text-transform: uppercase; color: #444;">
+      AURA EDITORIAL S.A.
+    </div>
+    <div style="text-align: center; font-size: 8pt; color: #777; margin-top: 5px;">
+      ${new Date().toLocaleDateString('es-ES', { year: 'numeric' })}
+    </div>
+  </div>
+  <div class="page-break"></div>
+
+  <!-- Páginas del Manuscrito -->
+  ${pages.map((pageText, idx) => {
+    const isEven = idx % 2 === 0;
+    const items = pageText.split('\n\n').map(p => p.trim()).filter(Boolean);
+    return `
+      <div class="a5-screen-page">
+        <div class="running-header">
+          <span class="running-header-left">${isEven ? "AURA DIGITAL" : titleUpper}</span>
+          <span class="running-header-right">Edición Folleto A5</span>
+          <div style="clear: both;"></div>
+        </div>
+        <div class="a5-page-content" style="height: 142mm; overflow: hidden; font-size: 10pt; line-height: 1.5;">
+          ${items.map((para, pIdx) => {
+            if (pIdx === 0 && idx === 0) {
+              return `<p class="no-indent first-letter">${para}</p>`;
+            }
+            return `<p>${para}</p>`;
+          }).join('')}
+        </div>
+        <div class="page-footer">
+          — ${idx + 1} —
+        </div>
+      </div>
+      <div class="page-break"></div>
+    `;
+  }).join('')}
+</body>
+</html>`;
+
+      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${state.title.toLowerCase().replace(/\s+/g, "_")}_folleto_a5.html`;
+      link.click();
+      URL.revokeObjectURL(url);
+      showCustomAlert("Folleto A5 Listo", "Se ha generado tu manuscrito en HTML adaptado en tamaño A5 de folleto. Ábrelo en tu navegador y pulsa Guardar como PDF para imprimirlo o exportarlo directamente.");
+
+    } else if (deliveryFormat === "a5_txt") {
+      // Plain text formatted with specific spacing and A5 page markers
+      const pages = paginateTextIntoA5Pages(currentText);
+      let textContent = `========================================================\n`;
+      textContent += `OBRA MAESTRA: ${titleUpper} (EDICIÓN FOLLETO A5)\n`;
+      textContent += `DIMENSIONES DEL FOLLETO RECOMENDADAS: A5 (14.8 x 21.0 cm)\n`;
+      textContent += `FECHA DE GENERACIÓN: ${new Date().toLocaleDateString('es-ES')}\n`;
+      textContent += `========================================================\n\n`;
+
+      pages.forEach((pageContent, idx) => {
+        textContent += `\n--- INICIO PÁGINA ${idx + 1} (Margen Folleto A5: 15mm) ---\n`;
+        textContent += `────────────────────────────────────────────────────────\n\n`;
+        
+        // Wrap paragraphs nicely
+        const paragraphs = pageContent.split("\n\n");
+        paragraphs.forEach(p => {
+          const words = p.split(" ");
+          let line = "      "; // indent first line paragraph
+          words.forEach(word => {
+            if (line.length + word.length > 65) {
+              textContent += line + "\n";
+              line = "";
+            }
+            line += word + " ";
+          });
+          textContent += line.trim() + "\n\n";
+        });
+
+        textContent += `\n────────────────────────────────────────────────────────\n`;
+        textContent += `                     [ Página ${idx + 1} ]\n`;
+        textContent += `--- FIN PÁGINA ${idx + 1} -------\n\n\n`;
+      });
+
+      const blob = new Blob([textContent], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${state.title.toLowerCase().replace(/\s+/g, "_")}_folleto_a5.txt`;
+      link.click();
+      URL.revokeObjectURL(url);
+      showCustomAlert("Folleto A5 (TXT) Listo", "El archivo de texto contiene los guiones de paginación e indentación recomendados para folleto A5.");
+
+    } else {
+      // Standard Flat TXT
+      const headers = `========================================================\nOBRA MAESTRA: ${state.title.toUpperCase()}\n========================================================\n\n`;
+      const docMeta = `CONCEPTO DE NICHO: ${state.concept}\n\n`;
+      const fullText = headers + docMeta + currentText;
+
+      const blob = new Blob([fullText], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${state.title.toLowerCase().replace(/\s+/g, "_")}_maestro.txt`;
+      link.click();
+      URL.revokeObjectURL(url);
+      showCustomAlert("Guardado de Borrador", "Descargado tu borrador de seguridad en plano (.txt).");
+    }
   };
 
   const getWordCount = () => {
@@ -962,24 +1452,55 @@ ${currentText.slice(0, 9500)}`;
                         value={state.concept}
                         onChange={(e) => setState(prev => ({ ...prev, concept: e.target.value }))}
                         placeholder="Describe el argumento, ambientación o arco de la historia..."
-                        className="w-full h-24 bg-[var(--bg-surface)] border border-[var(--border)] rounded p-3 text-xs text-[var(--text-main)] outline-none focus:ring-1 focus:ring-[var(--accent)] resize-none"
+                        className="w-full h-20 bg-[var(--bg-surface)] border border-[var(--border)] rounded p-3 text-xs text-[var(--text-main)] outline-none focus:ring-1 focus:ring-[var(--accent)] resize-none"
                       />
+                    </div>
+
+                    <div className="space-y-1.5 p-3 rounded-lg border border-yellow-500/10 bg-yellow-950/5">
+                      <div className="flex items-center gap-1.5 text-yellow-500 font-mono text-[9px] uppercase font-bold">
+                        <span>⭐ Regla de Oro Editorial</span>
+                      </div>
+                      <p className="text-[10px] text-zinc-300 leading-normal mt-1">
+                        <strong>Cero Alucinación literaria:</strong> Se debe defender íntegramente la historia, conservar el estilo lírico original y respetar fielmente la voz e intenciones del autor.
+                      </p>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-center">
+                        <label className="text-[10px] uppercase font-mono text-[var(--text-dim)] font-bold">Texto Original del Cuento</label>
+                        <span className="text-[9px] text-yellow-400 font-mono">FIEL AL AUTOR</span>
+                      </div>
+                      <textarea 
+                        value={state.originalStory || ""}
+                        onChange={(e) => setState(prev => ({ ...prev, originalStory: e.target.value }))}
+                        placeholder="Escribe o pega el texto completo del cuento original aquí..."
+                        className="w-full h-40 bg-[var(--bg-surface)] border border-[var(--border)] rounded p-3 text-xs text-[var(--text-main)] placeholder-zinc-600 outline-none focus:ring-1 focus:ring-[var(--accent)] font-serif italic leading-relaxed"
+                      />
+                      <p className="text-[9px] text-zinc-500 font-mono leading-none">Este texto servirá como ancla para evitar desviaciones o alucinaciones.</p>
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-[var(--border)] flex flex-wrap gap-2.5">
+                  <div className="pt-3 border-t border-[var(--border)] flex flex-wrap gap-2">
                     <button
                       onClick={loadPresetDemo}
                       className="flex-1 py-2 rounded bg-[rgba(197,160,89,0.06)] border border-[var(--border)] font-mono font-bold text-[9.5px] uppercase tracking-wider hover:border-[var(--accent)] hover:text-white text-[var(--accent)] transition-all"
+                      title="Cargar El Latido de los Colores"
                     >
-                      Cargar Ejemplo
+                      Ejemplo 1 (Colores)
+                    </button>
+                    <button
+                      onClick={loadPresetReina}
+                      className="flex-1 py-2 rounded bg-[rgba(197,160,89,0.06)] border border-[var(--border)] font-mono font-bold text-[9.5px] uppercase tracking-wider hover:border-[var(--accent)] hover:text-white hover:bg-[var(--accent)]/10 text-[var(--accent)] transition-all"
+                      title="Cargar La Reina del Silencio"
+                    >
+                      Ejemplo 2 (La Reina)
                     </button>
                     <button
                       onClick={saveToNoSQLMemory}
-                      className="px-3 py-2 border border-[var(--border)] rounded text-[var(--text-dim)] hover:text-white text-xs font-mono font-bold text-[9.5px] uppercase tracking-wider hover:bg-[var(--bg-surface)]"
+                      className="w-full py-2 border border-[var(--border)] rounded text-[var(--text-dim)] hover:text-white text-[9.5px] font-mono font-bold uppercase tracking-wider hover:bg-[var(--bg-surface)]"
                       title="Guardar borrador actual en historial"
                     >
-                      Guardar Memoria
+                      Guardar Memoria de Obra
                     </button>
                   </div>
                 </div>
@@ -1167,7 +1688,29 @@ ${currentText.slice(0, 9500)}`;
                     </select>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                    <button
+                      onClick={() => setEditorMode("edit")}
+                      className={cn(
+                        "p-1.5 px-3 rounded text-[9px] uppercase font-mono tracking-wider font-bold transition-all",
+                        editorMode === "edit" ? "bg-[var(--accent)] text-black" : "bg-[var(--bg-surface)] text-zinc-400 border border-[var(--border)] hover:text-white"
+                      )}
+                    >
+                      📝 Modo Editor
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditorMode("preview_a5");
+                        setPreviewPage(0);
+                      }}
+                      className={cn(
+                        "p-1.5 px-3 rounded text-[9px] uppercase font-mono tracking-wider font-bold transition-all flex items-center gap-1.5",
+                        editorMode === "preview_a5" ? "bg-[var(--accent)] text-black font-black" : "bg-[var(--bg-surface)] text-zinc-400 border border-[var(--border)] hover:text-white"
+                      )}
+                    >
+                      📖 Folleto A5 (${paginateTextIntoA5Pages(branches.find(b => b.id === activeBranchId)?.content || "").length} pág.)
+                    </button>
+                    <span className="text-zinc-600 font-mono hidden sm:inline">|</span>
                     <button
                       onClick={() => {
                         showCustomPrompt(
@@ -1186,36 +1729,116 @@ ${currentText.slice(0, 9500)}`;
                           }
                         );
                       }}
-                      className="p-1 px-2.5 rounded border border-[var(--border)] text-[9px] uppercase font-mono tracking-wider font-bold hover:border-[var(--accent)] text-[var(--accent)] transition-all"
+                      className="p-1 px-2.5 rounded border border-[var(--border)] text-[9px] uppercase font-mono tracking-wider font-bold hover:border-[var(--accent)] text-[var(--accent)] transition-all ml-auto"
                     >
                       + Nueva Rama
                     </button>
                   </div>
                 </div>
 
-                {/* Main Textarea */}
+                {/* Main Textarea / Folleto Mockup */}
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center text-[10px] text-zinc-500 font-mono">
-                    <span>Escribe o pega el borrador a perfeccionar:</span>
-                    <span>Modo Escritura directa autónomo</span>
-                  </div>
+                  {editorMode === "edit" ? (
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center text-[10px] text-zinc-500 font-mono">
+                        <span>Escribe o pega el borrador a perfeccionar:</span>
+                        <span>Modo Escritura directa autónomo</span>
+                      </div>
 
-                  <textarea 
-                    value={branches.find(b => b.id === activeBranchId)?.content || ""}
-                    onChange={(e) => {
-                      const txt = e.target.value;
-                      setBranches(prev => prev.map(b => b.id === activeBranchId ? { ...b, content: txt } : b));
-                      setState(prev => ({ ...prev, humanizedManuscript: txt }));
-                    }}
-                    placeholder="Pega tu manuscrito o historia aquí para comenzar a perfeccionarla..."
-                    className="w-full h-[500px] bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl p-5 text-sm font-serif leading-loose italic text-[var(--text-main)] outline-none focus:ring-1 focus:ring-[var(--accent)] resize-y overflow-y-auto"
-                  />
+                      <textarea 
+                        value={branches.find(b => b.id === activeBranchId)?.content || ""}
+                        onChange={(e) => {
+                          const txt = e.target.value;
+                          setBranches(prev => prev.map(b => b.id === activeBranchId ? { ...b, content: txt } : b));
+                          setState(prev => ({ ...prev, humanizedManuscript: txt }));
+                        }}
+                        placeholder="Pega tu manuscrito o historia aquí para comenzar a perfeccionarla..."
+                        className="w-full h-[500px] bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl p-5 text-sm font-serif leading-loose italic text-[var(--text-main)] outline-none focus:ring-1 focus:ring-[var(--accent)] resize-y overflow-y-auto"
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center text-[10px] text-zinc-500 font-mono">
+                        <span className="flex items-center gap-1.5 text-[var(--accent)]"><Sparkles className="w-3 h-3" /> VISTA MAQUETA PRELIMINAR (FOLLETO IMPRESO A5):</span>
+                        <span className="text-zinc-400">14.8 x 21.0 cm (Folleto Reclamado KDP)</span>
+                      </div>
+                      
+                      {/* Virtual Book Mockup Spreads */}
+                      <div className="relative bg-[#0d0d0d] rounded-2xl border border-zinc-800 p-6 md:p-10 flex flex-col items-center justify-center min-h-[500px]">
+                        <div className="w-full max-w-sm aspect-[1/1.41] bg-[#faf6ef] text-[#2C2A29] rounded-lg border border-[#dfdbd3] shadow-[0_15px_45px_rgba(0,0,0,0.7)] flex flex-col justify-between p-6 md:p-8 relative select-none">
+                          {/* Inner spine shadow of the book */}
+                          <div className="absolute top-0 bottom-0 left-0 w-3.5 bg-gradient-to-r from-black/10 to-transparent rounded-l pointer-events-none" />
+                          <div className="absolute top-0 bottom-0 left-0 w-[1px] bg-black/15 pointer-events-none" />
+
+                          {/* Running header */}
+                          <div className="border-b border-[#dfdbd3]/80 pb-1.5 flex justify-between items-center font-serif text-[7.5px] uppercase tracking-wider text-black/50">
+                            <span>{state.title ? state.title.slice(0, 24) : "AURA ORIGINAL"}</span>
+                            <span>Folleto A5</span>
+                          </div>
+
+                          {/* Page content */}
+                          <div className="flex-1 mt-4 font-serif text-[11px] leading-relaxed text-[#2C2A29] text-justify space-y-3 overflow-hidden italic">
+                            {(() => {
+                              const pages = paginateTextIntoA5Pages(branches.find(b => b.id === activeBranchId)?.content || "");
+                              const pageData = pages[previewPage] || "(Fin del manuscrito)";
+                              const paragraphs = pageData.split("\n\n").map(p => p.trim()).filter(Boolean);
+                              return paragraphs.map((para, paraIdx) => (
+                                <p key={paraIdx} className={cn(
+                                  "leading-relaxed",
+                                  paraIdx === 0 && previewPage === 0 ? "text-indent-0 first-line:font-bold" : "indent-4"
+                                )}>
+                                  {paraIdx === 0 && previewPage === 0 && para.length > 0 ? (
+                                    <>
+                                      <span className="float-left text-3xl font-bold font-serif leading-[0.8] mr-2 pt-0.5 text-black">
+                                        {para.charAt(0)}
+                                      </span>
+                                      {para.slice(1)}
+                                    </>
+                                  ) : para}
+                                </p>
+                              ));
+                            })()}
+                          </div>
+
+                          {/* Page Footer / Numbering */}
+                          <div className="pt-2 text-center font-serif text-[9px] font-bold text-black/70">
+                            — {previewPage + 1} —
+                          </div>
+                        </div>
+
+                        {/* Pagination Pager Arrow Controls */}
+                        <div className="flex items-center gap-4 mt-6 bg-zinc-900 border border-zinc-800 p-1.5 px-4 rounded-full z-10 text-xs">
+                          <button
+                            disabled={previewPage === 0}
+                            onClick={() => setPreviewPage(p => Math.max(0, p - 1))}
+                            className="text-zinc-400 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                            title="Página Anterior"
+                          >
+                            <ChevronLeft className="w-5 h-5" />
+                          </button>
+                          
+                          <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest">
+                            PÁGINA <strong className="text-white">{previewPage + 1}</strong> DE <strong className="text-white">{paginateTextIntoA5Pages(branches.find(b => b.id === activeBranchId)?.content || "").length}</strong>
+                          </span>
+
+                          <button
+                            disabled={previewPage >= paginateTextIntoA5Pages(branches.find(b => b.id === activeBranchId)?.content || "").length - 1}
+                            onClick={() => setPreviewPage(p => p + 1)}
+                            className="text-zinc-400 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                            title="Siguiente Página"
+                          >
+                            <ChevronRight className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Metadata Stats */}
                   <div className="flex items-center justify-between p-3.5 bg-neutral-900 rounded-lg border border-[var(--border)] font-mono text-[10px] text-[var(--text-dim)]">
                     <span>PALABRAS: <strong className="text-white font-bold">{getWordCount()}</strong></span>
                     <span>CARACTERES: <strong className="text-white font-bold">{getCharCount()}</strong></span>
-                    <span>ESTADO: <strong className="text-[var(--accent)] font-bold">EDICIÓN EN VIVO</strong></span>
+                    <span>EDICIÓN: <strong className="text-[var(--accent)] font-bold">{editorMode === "edit" ? "MANUAL" : "PREVISUALIZADOR A5"}</strong></span>
                   </div>
                 </div>
 
@@ -1228,6 +1851,207 @@ ${currentText.slice(0, 9500)}`;
                     Auditar en Equipo (Pasar al Paso 2) →
                   </button>
                 </div>
+              </div>
+
+              {/* SECTION: TRABAJOS REALIZADOS POR EL EQUIPO (CATÁLOGO DE OBRAS) */}
+              <div className="col-span-1 lg:col-span-12 mt-10 bg-[var(--bg-panel)] border border-[var(--border)] rounded-2xl p-6 lg:p-8 space-y-6 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-80 h-80 bg-[var(--accent)]/5 rounded-full blur-3xl pointer-events-none" />
+                
+                <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-[var(--border)] pb-6 gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded bg-[rgba(197,160,89,0.1)] border border-[rgba(197,160,89,0.2)] text-[var(--accent)] text-[9px] font-mono tracking-widest uppercase font-black">
+                        Registro Editorial NoSQL
+                      </span>
+                    </div>
+                    <h3 className="text-sm lg:text-base font-serif font-black tracking-wide text-white flex items-center gap-2 mt-1">
+                      💼 TRABAJOS REALIZADOS POR EL EQUIPO
+                    </h3>
+                    <p className="text-xs text-[var(--text-dim)] max-w-2xl">
+                      Mesa de control de obras catalogadas. Cada proyecto funciona en un sandbox hermético: manuscritos, ramas, directores de estilo y auditorías no se relacionan ni contaminan entre sí.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <button
+                      onClick={createNewProject}
+                      className="px-4 py-2 rounded bg-emerald-500 hover:bg-emerald-600 text-black font-semibold font-mono text-[10px] uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-lg shadow-emerald-500/10 cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Empezar Nueva Obra desde cero
+                    </button>
+                    <button
+                      onClick={loadPresetDemo}
+                      className="px-4 py-2 rounded bg-[rgba(197,160,89,0.06)] border border-[rgba(197,160,89,0.3)] hover:border-[var(--accent)] text-[var(--accent)] font-semibold font-mono text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                      title="Cargar Obra: El Latido de los Colores"
+                    >
+                      Cargar Ejemplo 1
+                    </button>
+                    <button
+                      onClick={loadPresetReina}
+                      className="px-4 py-2 rounded bg-[rgba(197,160,89,0.06)] border border-[rgba(197,160,89,0.3)] hover:border-[var(--accent)] hover:bg-[var(--accent)]/10 text-[var(--accent)] font-semibold font-mono text-[10px] uppercase tracking-wider transition-all cursor-pointer"
+                      title="Cargar Obra: La Reina del Silencio"
+                    >
+                      Cargar Ejemplo 2 (La Reina)
+                    </button>
+                  </div>
+                </div>
+
+                {/* Filter and Search Bar */}
+                <div className="flex flex-col sm:flex-row items-center gap-4 bg-[var(--bg-surface)] p-3 rounded-lg border border-[var(--border)]">
+                  <div className="relative w-full sm:w-80">
+                    <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input 
+                      type="text"
+                      value={catalogSearch}
+                      onChange={(e) => setCatalogSearch(e.target.value)}
+                      placeholder="Buscar obra por título..."
+                      className="w-full bg-[var(--bg-panel)] border border-[var(--border)] rounded pl-9 pr-3 py-1.5 text-xs text-white placeholder-zinc-500 outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                    />
+                  </div>
+                  <div className="text-[10px] text-zinc-500 font-mono sm:ml-auto">
+                    Total: <strong className="text-white">{editorialMemory.length} obras</strong> registradas en memoria aislada.
+                  </div>
+                </div>
+
+                {/* Catalog Grid */}
+                {editorialMemory.filter(item => 
+                  item.title.toLowerCase().includes(catalogSearch.toLowerCase())
+                ).length === 0 ? (
+                  <div className="py-12 text-center rounded-xl border border-dashed border-[var(--border)] bg-[rgba(255,255,255,0.01)] space-y-3">
+                    <Database className="w-8 h-8 text-zinc-600 mx-auto" />
+                    <p className="text-xs text-zinc-400 font-medium">No se encontraron trabajos que coincidan con la búsqueda.</p>
+                    <p className="text-[10px] text-zinc-500 max-w-md mx-auto">
+                      Instancia un nuevo borrador arriba o pulsa "Cargar Ejemplo" para visualizar la estructura maestro generada por nuestros consejeros.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {editorialMemory
+                      .filter(item => item.title.toLowerCase().includes(catalogSearch.toLowerCase()))
+                      .map((item) => {
+                        const isActive = state.id === item.id;
+                        const wordCount = item.wordCount || 
+                          (item.branches?.find((b: any) => b.id === item.activeBranchId)?.content || "").split(/\s+/).filter(Boolean).length || 0;
+                        const draftText = item.branches?.find((b: any) => b.id === item.activeBranchId)?.content || item.projectState?.originalStory || "";
+                        const snippet = draftText.slice(0, 140) + (draftText.length > 140 ? "..." : "");
+                        
+                        return (
+                          <div 
+                            key={item.id}
+                            className={cn(
+                              "border rounded-xl bg-[var(--bg-surface)] p-5 transition-all flex flex-col justify-between hover:translate-y-[-2px] duration-300 relative",
+                              isActive 
+                                ? "border-[var(--accent)] shadow-xl shadow-yellow-500/5 ring-1 ring-[var(--accent)]/20" 
+                                : "border-[var(--border)]"
+                            )}
+                          >
+                            {isActive && (
+                              <div className="absolute -top-2.5 right-4 bg-[var(--accent)] text-black text-[8px] font-black font-mono tracking-widest px-2.5 py-0.5 rounded-full uppercase">
+                                Editor Activo
+                              </div>
+                            )}
+
+                            <div className="space-y-3 flex-1">
+                              {/* Card Header Info */}
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="space-y-1 truncate">
+                                  <h4 className="font-serif font-bold text-white text-sm tracking-wide truncate uppercase hover:text-[var(--accent)] transition-colors">
+                                    "{item.title}"
+                                  </h4>
+                                  <div className="flex items-center gap-2 text-[9px] text-[var(--text-dim)] font-mono">
+                                    <span>{item.date}</span>
+                                    <span>•</span>
+                                    <span>{wordCount} palabras</span>
+                                  </div>
+                                </div>
+                                <div className="w-8 h-8 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center font-serif text-amber-500 font-black shrink-0 text-xs">
+                                  {item.title.charAt(0)}
+                                </div>
+                              </div>
+
+                              {/* Concept Sneak Peek */}
+                              <p className="text-[11px] text-zinc-400 font-serif leading-relaxed line-clamp-3 bg-zinc-950/20 p-2.5 rounded border border-[var(--border)] tracking-wide">
+                                {snippet || "Sin sinopsis provista todavía."}
+                              </p>
+
+                              {/* Status Indicators */}
+                              <div className="pt-2 flex flex-wrap items-center gap-1.5">
+                                <span className="text-[8.5px] px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 font-mono text-zinc-300">
+                                  {item.projectState?.currentPhase || "REDACCIÓN"}
+                                </span>
+                                {item.branches && item.branches.length > 1 && (
+                                  <span className="text-[8.5px] px-2 py-0.5 rounded bg-amber-950/30 border border-amber-500/20 font-mono text-amber-400">
+                                    🌳 {item.branches.length} Ramas
+                                  </span>
+                                )}
+                                {item.auditResults && Object.keys(item.auditResults).length > 0 && (
+                                  <span className="text-[8.5px] px-2 py-0.5 rounded bg-blue-950/30 border border-blue-500/20 font-mono text-blue-400">
+                                    ✓ Auditado
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Card Footer Actions */}
+                            <div className="mt-5 pt-3.5 border-t border-[var(--border)] flex items-center justify-between gap-2">
+                              <button
+                                onClick={() => loadProjectFromMemory(item)}
+                                className={cn(
+                                  "px-3 py-1.5 rounded font-mono text-[9px] uppercase font-bold tracking-wider transition-all flex items-center gap-1.5",
+                                  isActive
+                                    ? "bg-[rgba(197,160,89,0.1)] text-[var(--accent)] border border-amber-500/30"
+                                    : "bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700"
+                                )}
+                                title="Cargar este manuscrito completo en el entorno de trabajo"
+                              >
+                                {isActive ? "Mesa Activa" : "📁 Trabajar"}
+                              </button>
+
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  onClick={() => {
+                                    const text = item.branches?.find((b: any) => b.id === item.activeBranchId)?.content || item.projectState?.humanizedManuscript || "";
+                                    const blob = new Blob([
+                                      `============================================================\n`,
+                                      `OBRA DEL CATÁLOGO EDITORIAL: ${item.title}\n`,
+                                      `FECHA: ${item.date}\n`,
+                                      `============================================================\n\n`,
+                                      `PROPUESTA SINÓPTICA:\n`,
+                                      `${item.projectState?.concept || "Sin concepto inicial"}\n\n`,
+                                      `TEXTO ORIGINAL DEL AUTOR:\n`,
+                                      `------------------------------------------------------------\n`,
+                                      `${item.projectState?.originalStory || "No provisto"}\n\n`,
+                                      `MANUSCRITO SANEADO FINAL:\n`,
+                                      `------------------------------------------------------------\n`,
+                                      `${text}\n`
+                                    ], { type: "text/plain;charset=utf-8" });
+                                    const url = URL.createObjectURL(blob);
+                                    const link = document.createElement("a");
+                                    link.href = url;
+                                    link.download = `${item.title.toLowerCase().replace(/\s+/g, "_")}_compilado_equipo.txt`;
+                                    link.click();
+                                    URL.revokeObjectURL(url);
+                                  }}
+                                  className="p-1.5 rounded bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-white transition-all"
+                                  title="Exportar copia compilada del manuscrito y reportes"
+                                >
+                                  <Download className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={(e) => deleteProjectFromMemory(item.id, e)}
+                                  className="p-1.5 rounded bg-red-950/20 border border-red-500/20 hover:bg-red-500 hover:text-black text-red-400 transition-all"
+                                  title="Borrar obra de la memoria persistentemente"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
               </div>
 
             </motion.div>
@@ -1499,19 +2323,156 @@ ${currentText.slice(0, 9500)}`;
                           </div>
                         )}
 
-                        {expandedAgentId === "illustration" && (
-                          <div className="space-y-3 font-sans text-xs">
-                            <p className="font-bold text-[10px] uppercase text-purple-400 font-mono">Imágenes del Director de Arte</p>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                              {(auditResults.illustration.illustrationPrompts || []).map((ilm: string, idx: number) => (
-                                <div key={idx} className="p-3 bg-neutral-900 border border-zinc-800 rounded">
-                                  <span className="text-[8px] uppercase tracking-wider text-purple-400 font-bold block mb-1">Concepto {idx+1}</span>
-                                  <p className="text-[10px] text-zinc-300 italic">"{ilm}"</p>
+                        {expandedAgentId === "illustration" && (() => {
+                          const scenesList = auditResults.illustration.escenas || 
+                            (auditResults.illustration.illustrationPrompts || []).map((prompt: any, i: number) => {
+                              if (typeof prompt === "string") {
+                                return {
+                                  titulo: `Escena Clave #${i + 1}`,
+                                  descripcion_visual: "Foco lírico de la atmósfera del capítulo.",
+                                  prompt_ilustracion: prompt,
+                                  paleta: auditResults.illustration.paleta_general || "Pincelada clásica evocadora",
+                                  atmosfera: auditResults.illustration.estilo_recomendado || "Mística sensorial"
+                                };
+                              }
+                              return prompt;
+                            });
+
+                          return (
+                            <div className="space-y-6 font-sans text-xs">
+                              {/* Illustrations API Key Setting */}
+                              <div className="p-4 bg-purple-950/5 border border-purple-500/10 rounded-xl space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span className="p-1 px-2 rounded bg-purple-500/10 text-purple-400 font-mono text-[9px] uppercase font-bold">Configuración de Arte</span>
+                                    <h5 className="font-serif font-black text-white text-xs uppercase tracking-wide">Clave de API / App Key de Ilustraciones</h5>
+                                  </div>
+                                  <span className="text-[9px] font-mono text-purple-400 font-bold uppercase tracking-wider">Habilitador de Render</span>
                                 </div>
-                              ))}
+                                <p className="text-[10px] text-zinc-400 leading-normal">
+                                  Escribe o pega una Clave de API / App Key (ej. Gemini/StableDiffusion, o cualquier identificador) para habilitar el renderizado visual activo de tus láminas e ilustraciones realistas. Las imágenes se guardarán localmente para la maqueta final del libro.
+                                </p>
+                                <div className="flex gap-2">
+                                  <input 
+                                    type="password"
+                                    value={illustrationsApiKey}
+                                    onChange={(e) => {
+                                      const keyStr = e.target.value;
+                                      setIllustrationsApiKey(keyStr);
+                                      localStorage.setItem("aura_illustrations_api_key", keyStr);
+                                    }}
+                                    placeholder="Ingresa tu App Key para ilustraciones (ej: kdp_art_prod_...)"
+                                    className="flex-1 bg-black border border-purple-900/40 rounded px-3 py-2 text-xs text-white placeholder-zinc-600 outline-none focus:border-purple-500 font-mono"
+                                  />
+                                  {illustrationsApiKey ? (
+                                    <button 
+                                      onClick={() => {
+                                        setIllustrationsApiKey("");
+                                        localStorage.removeItem("aura_illustrations_api_key");
+                                        showCustomAlert("Limpiado", "Se ha removido la clave de ilustraciones.");
+                                      }}
+                                      className="px-3 border border-red-500/30 text-red-400 hover:text-white hover:bg-red-950/20 rounded font-mono text-[10px] uppercase font-bold"
+                                    >
+                                      Remover/Limpiar
+                                    </button>
+                                  ) : (
+                                    <span className="px-3.5 py-2 rounded bg-neutral-900 border border-zinc-800 text-zinc-500 font-mono text-[9.5px] uppercase">
+                                      INACTIVO
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-zinc-800 pb-2">
+                                <div>
+                                  <p className="font-bold text-[10.5px] uppercase text-purple-400 font-mono">Imágenes y Conceptos del Director de Arte</p>
+                                  <p className="text-[9.5px] text-zinc-500 mt-0.5">Estilo Soportado: {auditResults.illustration.estilo_recomendado || "Automático"} • Paleta: {auditResults.illustration.paleta_general || "Atmósferica"}</p>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {scenesList.map((scene: any, idx: number) => {
+                                  const sceneId = `scene-${idx}-${activeBranchId}`;
+                                  const renderUrl = renderedImages[sceneId];
+                                  const isLoading = imageLoading[sceneId];
+
+                                  return (
+                                    <div key={idx} className="p-4 bg-neutral-900 border border-zinc-800 rounded-xl space-y-3 flex flex-col justify-between">
+                                      <div className="space-y-1.5">
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-[8px] uppercase tracking-wider text-purple-400 font-bold block font-mono">Consejo {idx+1}</span>
+                                          {scene.paleta && (
+                                            <span className="font-mono text-[8px] bg-neutral-800 px-1.5 py-0.5 rounded text-zinc-400 truncate max-w-[120px]">{scene.paleta}</span>
+                                          )}
+                                        </div>
+                                        <h6 className="font-serif font-bold text-white text-xs">{scene.titulo || "Atmósfera Clave"}</h6>
+                                        <p className="text-[10px] text-zinc-400 italic">"{scene.prompt_ilustracion || scene.descripcion_visual || scene}"</p>
+                                      </div>
+
+                                      {/* Interactive Visual Preview Render Frame */}
+                                      <div className="space-y-2 mt-2">
+                                        <div className="w-full aspect-square rounded-lg border border-zinc-800 bg-black overflow-hidden flex items-center justify-center relative group">
+                                          {renderUrl ? (
+                                            <>
+                                              <img 
+                                                src={renderUrl} 
+                                                alt={scene.titulo} 
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                referrerPolicy="no-referrer"
+                                              />
+                                              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-2">
+                                                <button
+                                                  onClick={() => handleGenerateIllustration(scene.prompt_ilustracion || scene, sceneId)}
+                                                  className="bg-purple-600 hover:bg-purple-500 text-white font-mono text-[9px] uppercase font-bold p-1.5 px-2.5 rounded shadow-lg transition-transform"
+                                                >
+                                                  Regenerar ↺
+                                                </button>
+                                              </div>
+                                            </>
+                                          ) : (
+                                            <div className="text-center p-3 flex flex-col items-center justify-center space-y-1.5">
+                                              <span className="text-lg text-purple-500/40">🎨</span>
+                                              <span className="text-[8.5px] font-mono text-zinc-600 block uppercase">Sin Renderizar</span>
+                                            </div>
+                                          )}
+
+                                          {isLoading && (
+                                            <div className="absolute inset-0 bg-neutral-950/80 flex flex-col items-center justify-center p-3 space-y-2 text-center">
+                                              <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />
+                                              <span className="text-[8px] font-mono text-purple-400 uppercase tracking-widest animate-pulse">Renderizando...</span>
+                                            </div>
+                                          )}
+                                        </div>
+
+                                        <button
+                                          onClick={() => {
+                                            if (!illustrationsApiKey) {
+                                              showCustomAlert(
+                                                "Configuración de App Key Requerida",
+                                                "Por favor, ingresa tu clave API / App Key en el campo de arriba para autorizar al motor artístico de ilustraciones literarias."
+                                              );
+                                              return;
+                                            }
+                                            handleGenerateIllustration(scene.prompt_ilustracion || scene, sceneId);
+                                          }}
+                                          disabled={isLoading}
+                                          className={cn(
+                                            "w-full py-1.5 rounded font-mono font-bold text-[9px] uppercase tracking-wider transition-all flex items-center justify-center gap-1",
+                                            renderUrl 
+                                              ? "bg-zinc-800 text-zinc-200 border border-zinc-700 hover:bg-zinc-700"
+                                              : "bg-purple-600 hover:bg-purple-500 text-white shadow shadow-purple-500/20"
+                                          )}
+                                        >
+                                          {isLoading ? "Creando..." : renderUrl ? "Regenerar Con Key ↺" : "🎨 Generar Ilustración"}
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          );
+                        })()}
 
                       </div>
                     ) : (
@@ -1915,17 +2876,40 @@ ${currentText.slice(0, 9500)}`;
                 </div>
 
                 {/* Pack Master file compiles downloads */}
-                <div className="pt-4 border-t border-[var(--border)] flex flex-col sm:flex-row justify-between items-center gap-4">
-                  <div>
-                    <h5 className="text-[11px] font-bold text-white uppercase">Paquete Maestro Definitivo Listo</h5>
-                    <p className="text-[9px] text-zinc-500 font-mono">Contiene manuscrito en formato txt plano con metadatos de KDP</p>
+                <div className="pt-5 border-t border-[var(--border)] space-y-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[var(--bg-surface)] p-4 rounded-xl border border-[var(--border)]">
+                    <div className="space-y-1">
+                      <h4 className="text-[11px] font-bold text-white uppercase flex items-center gap-1.5">
+                        📖 CONFIGURACIÓN DE FORMATO DE ENTREGA
+                      </h4>
+                      <p className="text-[9.5px] text-zinc-400 font-mono">
+                        Selecciona el tipo de empaquetado. Por defecto está adaptado para maquetación física de Folleto A5:
+                      </p>
+                    </div>
+
+                    <select
+                      value={deliveryFormat}
+                      onChange={(e) => setDeliveryFormat(e.target.value as any)}
+                      className="bg-[#121212] border border-[var(--border)] p-2 rounded text-xs font-mono text-[var(--accent)] font-bold outline-none"
+                    >
+                      <option value="a5_html">📐 Folleto Impreso A5 (HTML Listo para PDF)</option>
+                      <option value="a5_txt">📝 Folleto Paginado A5 (TXT Maquetado)</option>
+                      <option value="standard_txt">📄 Borrador Plano Estándar (.txt)</option>
+                    </select>
                   </div>
-                  <button
-                    onClick={handleDownload}
-                    className="p-3 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 transition-all font-mono font-bold text-[10px] text-black rounded-lg uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-yellow-500/5"
-                  >
-                    <Download className="w-4 h-4" /> DESCARGAR PAQUETE MAESTRO
-                  </button>
+
+                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div>
+                      <h5 className="text-[11px] font-bold text-white uppercase">Paquete Maestro Definitivo Listo</h5>
+                      <p className="text-[9px] text-zinc-500 font-mono">Contiene manuscrito en formato seleccionado ({deliveryFormat.toUpperCase()}) con metadatos de maquetación profunda</p>
+                    </div>
+                    <button
+                      onClick={handleDownload}
+                      className="p-3 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 transition-all font-mono font-bold text-[10px] text-black rounded-lg uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-yellow-500/5 cursor-pointer"
+                    >
+                      <Download className="w-4 h-4" /> DESCARGAR PAQUETE MAESTRO
+                    </button>
+                  </div>
                 </div>
 
               </div>
