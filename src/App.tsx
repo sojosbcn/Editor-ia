@@ -212,6 +212,28 @@ export default function App() {
   const [previewPage, setPreviewPage] = useState<number>(0);
   const [deliveryFormat, setDeliveryFormat] = useState<"a5_html" | "a5_txt" | "standard_txt">("a5_html");
 
+  // AI engine and model selection (synchronized with lib/gemini.ts headers)
+  const [aiEngine, setAiEngine] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem("aura_ai_engine") || "gemini";
+    }
+    return "gemini";
+  });
+  const [groqModel, setGroqModel] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem("aura_groq_model") || "llama-3.3-70b-versatile";
+    }
+    return "llama-3.3-70b-versatile";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("aura_ai_engine", aiEngine);
+  }, [aiEngine]);
+
+  useEffect(() => {
+    localStorage.setItem("aura_groq_model", groqModel);
+  }, [groqModel]);
+
   // Amazon KDP Strategist tools state
   const [msrp, setMsrp] = useState<number>(4.99);
   const [paperbackPages, setPaperbackPages] = useState<number>(150);
@@ -1344,6 +1366,32 @@ ${currentText.slice(0, 9500)}`;
               📖 {state.title.toUpperCase()}
             </span>
           )}
+
+          {/* AI Engine & Model Selector */}
+          <div className="flex items-center gap-1 bg-zinc-950/40 border border-zinc-800/80 rounded px-2.5 py-1 text-xs">
+            <span className="text-[9px] uppercase font-mono font-bold text-zinc-500 mr-1">Motor:</span>
+            <select
+              value={aiEngine}
+              onChange={(e) => setAiEngine(e.target.value)}
+              className="bg-transparent text-[10.5px] text-zinc-300 font-semibold outline-none border-none cursor-pointer pr-1 hover:text-white"
+            >
+              <option value="gemini" className="bg-zinc-950 text-white">Gemini 3.5 Flash</option>
+              <option value="groq" className="bg-zinc-950 text-white">Groq LPU (Llama)</option>
+            </select>
+
+            {aiEngine === "groq" && (
+              <select
+                value={groqModel}
+                onChange={(e) => setGroqModel(e.target.value)}
+                className="bg-transparent text-[10px] text-amber-500/90 font-mono outline-none border-l border-zinc-800 pl-2 cursor-pointer ml-1.5 hover:text-amber-400"
+              >
+                <option value="llama-3.3-70b-versatile" className="bg-zinc-950 text-white">Llama 3.3 70B</option>
+                <option value="llama-3.1-8b-instant" className="bg-zinc-950 text-white">Llama 3.1 8B</option>
+                <option value="gemma2-9b-it" className="bg-zinc-950 text-white">Gemma 2 9B</option>
+              </select>
+            )}
+          </div>
+
           <button
             onClick={() => setIsCorrectionsDeskOpen(!isCorrectionsDeskOpen)}
             className={cn(

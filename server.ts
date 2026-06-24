@@ -15,6 +15,11 @@ if (!apiKey) {
   console.warn("CRITICAL: GEMINI_API_KEY is not defined in the environment. Server is starting but AI requests will fail.");
 }
 
+const groqApiKey = process.env.GROQ_API_KEY;
+if (!groqApiKey) {
+  console.warn("WARNING: GROQ_API_KEY is not defined in the environment. Groq model options will not be functional until configured.");
+}
+
 const ai = new GoogleGenAI({
   apiKey: apiKey || "",
   httpOptions: {
@@ -26,6 +31,121 @@ const ai = new GoogleGenAI({
 
 // We prefer gemini-3.5-flash for balanced quick and highly creative text response, as recommended by gemini-api skill guidelines
 const MODEL_NAME = "gemini-3.5-flash";
+
+// Helper to convert Gemini contents schema to Groq chat completions messages
+function formatGeminiContentsToGroq(contents: any[], systemInstruction?: string) {
+  const messages: Array<{ role: string; content: string }> = [];
+  if (systemInstruction) {
+    messages.push({ role: "system", content: systemInstruction });
+  }
+  for (const item of contents) {
+    const role = item.role === "model" ? "assistant" : (item.role || "user");
+    let contentText = "";
+    if (item.parts && Array.isArray(item.parts)) {
+      contentText = item.parts.map((p: any) => p.text || "").join("\n");
+    } else if (typeof item.content === "string") {
+      contentText = item.content;
+    } else if (Array.isArray(item.content)) {
+      contentText = item.content.map((p: any) => p.text || "").join("\n");
+    } else {
+      contentText = String(item.content || "");
+    }
+    messages.push({ role, content: contentText });
+  }
+  return messages;
+}
+
+// Helper to call Groq LPU Chat completions API using native fetch
+async function generateGroqContent(params: {
+  model: string;
+  messages: Array<{ role: string; content: string }>;
+  jsonMode?: boolean;
+}) {
+  const groqKey = process.env.GROQ_API_KEY;
+  if (!groqKey) {
+    throw new Error("La clave de API de Groq (GROQ_API_KEY) no está definida. Configúrala en la barra de Ajustes > Secretos.");
+  }
+
+  try {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${groqKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: params.model,
+        messages: params.messages,
+        temperature: 0.7,
+        ...(params.jsonMode ? { response_format: { type: "json_object" } } : {})
+      })
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`Servicio de Groq devolvió estado ${response.status}: ${errorBody || response.statusText}`);
+    }
+
+    const data: any = await response.json();
+    const content = data.choices?.[0]?.message?.content || "";
+    return { text: content };
+  } catch (err: any) {
+    console.error("[Groq Execution Error]", err);
+    throw new Error(`Fallo en la consulta de Groq: ${err.message || err}`);
+  }
+}
+
+// Router to direct calls to either Gemini or Groq based on custom request headers
+async function generateUniversalContent(params: {
+  systemInstruction?: string;
+  contents: any[];
+  responseMimeType?: string;
+  responseSchema?: any;
+  reqHeaders?: Record<string, any>;
+  tools?: any[];
+}) {
+  const aiEngine = params.reqHeaders?.['x-ai-engine'] || 'gemini';
+  const groqModelSelected = params.reqHeaders?.['x-groq-model'] || 'llama-3.3-70b-versatile';
+
+  if (aiEngine === 'groq') {
+    const jsonMode = params.responseMimeType === 'application/json';
+    let finalSystemInstruction = params.systemInstruction || "";
+    
+    if (jsonMode && params.responseSchema) {
+      finalSystemInstruction += `\n\nCRITICAL: You must return a valid JSON object. Do not include markdown formatting like \`\`\`json or any conversational prefix/suffix. The JSON must match this structure:\n${JSON.stringify(params.responseSchema, null, 2)}`;
+    }
+    
+    const messages = formatGeminiContentsToGroq(params.contents, finalSystemInstruction);
+    const result = await generateGroqContent({
+      model: groqModelSelected,
+      messages,
+      jsonMode
+    });
+    
+    // In case the model still wraps JSON in markdown backticks (fallback)
+    let cleanText = result.text || "";
+    if (cleanText.includes("```")) {
+      const match = cleanText.match(/```(?:json)?([\s\S]*?)```/);
+      if (match) {
+        cleanText = match[1].trim();
+      }
+    }
+    return { text: cleanText };
+  } else {
+    // Default to Gemini API
+    const config: any = {};
+    if (params.systemInstruction) config.systemInstruction = params.systemInstruction;
+    if (params.responseMimeType) config.responseMimeType = params.responseMimeType;
+    if (params.responseSchema) config.responseSchema = params.responseSchema;
+    if (params.tools) config.tools = params.tools;
+
+    return await generateContentWithRetry({
+      model: MODEL_NAME,
+      contents: params.contents,
+      config
+    });
+  }
+}
 
 // Wrapper function to execute Gemini requests with automatic retry and user-friendly error formatting
 async function generateContentWithRetry(params: {
@@ -130,20 +250,18 @@ Fases del Flujo de Trabajo:
       { role: 'user', parts: [{ text: userMessage }] }
     ];
 
-    // Determine config based on searchGrounding preference
-    const config: any = { systemInstruction };
-    if (searchGrounding) {
-      config.tools = [{ googleSearch: {} }];
-    }
+    // Determine tools based on searchGrounding preference (Gemini only)
+    const tools = (searchGrounding && req.headers['x-ai-engine'] !== 'groq') ? [{ googleSearch: {} }] : undefined;
 
-    const response = await generateContentWithRetry({
-      model: MODEL_NAME,
+    const response = await generateUniversalContent({
+      systemInstruction,
       contents,
-      config
+      reqHeaders: req.headers,
+      tools
     });
 
-    // Extract grounding metadata chunks if available
-    const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || null;
+    // Extract grounding metadata chunks if available (Gemini only)
+    const groundingChunks = (response as any).candidates?.[0]?.groundingMetadata?.groundingChunks || null;
 
     res.json({ 
       text: response.text,
@@ -175,31 +293,29 @@ Devuelve EXCLUSIVAMENTE un objeto JSON puro con la estructura del esquema dado. 
 
 Formato esperado: { "reports": [ { "department": "...", "feedback": "...", "status": "approved" } ] }`;
 
-    const response = await generateContentWithRetry({
-      model: MODEL_NAME,
+    const response = await generateUniversalContent({
+      systemInstruction,
       contents: [{ role: 'user', parts: [{ text: `Evaluate this concept and provide departmental reports in raw JSON format.` }] }],
-      config: { 
-        systemInstruction,
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            reports: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  department: { type: Type.STRING },
-                  feedback: { type: Type.STRING },
-                  status: { type: Type.STRING }
-                },
-                required: ["department", "feedback", "status"]
-              }
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          reports: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                department: { type: Type.STRING },
+                feedback: { type: Type.STRING },
+                status: { type: Type.STRING }
+              },
+              required: ["department", "feedback", "status"]
             }
-          },
-          required: ["reports"]
-        }
-      }
+          }
+        },
+        required: ["reports"]
+      },
+      reqHeaders: req.headers
     });
 
     const parsedData = JSON.parse(response.text || '{"reports":[]}');
@@ -225,10 +341,10 @@ Use professional literary techniques.
 Concept: ${concept}
 Guidelines: ${guidelines || 'Sigue los estándares editoriales de la agencia.'}`;
 
-    const response = await generateContentWithRetry({
-      model: MODEL_NAME,
+    const response = await generateUniversalContent({
+      systemInstruction,
       contents: [{ role: 'user', parts: [{ text: "Escribe el manuscrito literario completo estructurado por capítulos detallados con títulos rítmicos." }] }],
-      config: { systemInstruction }
+      reqHeaders: req.headers
     });
 
     res.json({ text: response.text });
@@ -252,10 +368,10 @@ Ensure it feels 100% organic, human-written, rich in sensory language, and emoti
 YOU MUST RESPOND EXCLUSIVELY IN SPANISH. 
 Avoid robotic transitions, typical clichés, and repetitive sentence structures.`;
 
-    const response = await generateContentWithRetry({
-      model: MODEL_NAME,
+    const response = await generateUniversalContent({
+      systemInstruction,
       contents: [{ role: 'user', parts: [{ text }] }],
-      config: { systemInstruction }
+      reqHeaders: req.headers
     });
 
     res.json({ text: response.text });
@@ -289,29 +405,27 @@ El objeto de respuesta JSON debe contener obligatoriamente estos campos en base 
 
 Formato esperado: { "historicalData": "...", "trends": "...", "roi": "...", "investmentPlan": "...", "rrp": "...", "salesStrategy": "...", "illustrationPrompts": ["...", "..."] }`;
 
-    const response = await generateContentWithRetry({
-      model: MODEL_NAME,
+    const response = await generateUniversalContent({
+      systemInstruction,
       contents: [{ role: 'user', parts: [{ text: `Analyze this concept: ${concept}\n\nManuscript: ${manuscript.slice(0, 2000)}` }] }],
-      config: { 
-        systemInstruction,
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            historicalData: { type: Type.STRING },
-            trends: { type: Type.STRING },
-            roi: { type: Type.STRING },
-            investmentPlan: { type: Type.STRING },
-            rrp: { type: Type.STRING },
-            salesStrategy: { type: Type.STRING },
-            illustrationPrompts: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING }
-            }
-          },
-          required: ["historicalData", "trends", "roi", "investmentPlan", "rrp", "salesStrategy", "illustrationPrompts"]
-        }
-      }
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          historicalData: { type: Type.STRING },
+          trends: { type: Type.STRING },
+          roi: { type: Type.STRING },
+          investmentPlan: { type: Type.STRING },
+          rrp: { type: Type.STRING },
+          salesStrategy: { type: Type.STRING },
+          illustrationPrompts: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING }
+          }
+        },
+        required: ["historicalData", "trends", "roi", "investmentPlan", "rrp", "salesStrategy", "illustrationPrompts"]
+      },
+      reqHeaders: req.headers
     });
 
     const parsedData = JSON.parse(response.text || '{}');
@@ -345,8 +459,8 @@ Return a JSON with precisely:
 
 Format: { "explanation": "Confirmada la incoherencia física... He modificado el pasaje de Julia para que abra el ventanal antes de llorar, así las lágrimas caen al exterior donde la nube las recoge. He conservado el resto de la obra intacta.", "correctedManuscript": "El texto completo..." }`;
 
-    const response = await generateContentWithRetry({
-      model: MODEL_NAME,
+    const response = await generateUniversalContent({
+      systemInstruction,
       contents: [
         {
           role: 'user',
@@ -355,18 +469,16 @@ Format: { "explanation": "Confirmada la incoherencia física... He modificado el
           }]
         }
       ],
-      config: {
-        systemInstruction,
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            explanation: { type: Type.STRING },
-            correctedManuscript: { type: Type.STRING }
-          },
-          required: ["explanation", "correctedManuscript"]
-        }
-      }
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          explanation: { type: Type.STRING },
+          correctedManuscript: { type: Type.STRING }
+        },
+        required: ["explanation", "correctedManuscript"]
+      },
+      reqHeaders: req.headers
     });
 
     res.json(JSON.parse(response.text || '{}'));
@@ -587,14 +699,12 @@ app.post("/api/editorial-audit", async (req, res) => {
         return res.status(400).json({ error: "Invalid agentId" });
     }
 
-    const response = await generateContentWithRetry({
-      model: MODEL_NAME,
+    const response = await generateUniversalContent({
+      systemInstruction,
       contents: [{ role: 'user', parts: [{ text }] }],
-      config: {
-        systemInstruction,
-        responseMimeType: "application/json",
-        responseSchema: schema
-      }
+      responseMimeType: "application/json",
+      responseSchema: schema,
+      reqHeaders: req.headers
     });
 
     res.json(JSON.parse(response.text || '{}'));
@@ -616,10 +726,10 @@ app.post("/api/translate", async (req, res) => {
 Your task is to translate and adapt the provided literary content into ${targetLanguage}.
 CRITICAL: Maintain the exact feeling, rhythm, emotion, tone, and formatting of the story. Ensure it sounds completely natural and professional in the target language.`;
 
-    const response = await generateContentWithRetry({
-      model: MODEL_NAME,
+    const response = await generateUniversalContent({
+      systemInstruction,
       contents: [{ role: 'user', parts: [{ text: `Translate this text: \n\n${text}` }] }],
-      config: { systemInstruction }
+      reqHeaders: req.headers
     });
 
     res.json({ text: response.text });
