@@ -714,28 +714,89 @@ app.post("/api/editorial-audit", async (req, res) => {
   }
 });
 
-// Endpoint for Localization / Adaptative Translation Department
+// Literary translation department. The source manuscript is never modified here.
 app.post("/api/translate", async (req, res) => {
   try {
-    const { text, targetLanguage } = req.body;
-    if (!text || !targetLanguage) {
-      return res.status(400).json({ error: "Missing text or targetLanguage parameter" });
+    const { text, targetLanguage, title, concept, audience } = req.body || {};
+    if (typeof text !== "string" || !text.trim() || typeof targetLanguage !== "string" || !targetLanguage.trim()) {
+      return res.status(400).json({ error: "Falta el manuscrito o el idioma de destino." });
+    }
+    if (text.length > 120000) {
+      return res.status(413).json({ error: "El manuscrito supera el límite actual de 120.000 caracteres. Divide la obra por capítulos para traducirla conservando el contexto de cada parte." });
     }
 
-    const systemInstruction = `You are the specialized Editorial Localization and Translation Department.
-Your task is to translate and adapt the provided literary content into ${targetLanguage}.
-CRITICAL: Maintain the exact feeling, rhythm, emotion, tone, and formatting of the story. Ensure it sounds completely natural and professional in the target language.`;
+    const isCatalan = /catal[aà]|catalan/i.test(targetLanguage);
+    const storyMetadata = [
+      title ? \`Título: \${String(title).slice(0, 300)}\` : "",
+      concept ? \`Concepto editorial: \${String(concept).slice(0, 2000)}\` : "",
+      audience ? \`Público lector: \${String(audience).slice(0, 300)}\` : ""
+    ].filter(Boolean).join("\n");
 
-    const response = await generateUniversalContent({
-      systemInstruction,
-      contents: [{ role: 'user', parts: [{ text: `Translate this text: \n\n${text}` }] }],
+    const catalanProfile = isCatalan ? String.raw\`
+PERFIL LINGÜÍSTICO OBLIGATORIO — CATALÀ ESTÀNDARD CENTRAL DE CATALUNYA
+- Escriu en català normatiu actual, natural i literari, prenent com a referència general la normativa de l'Institut d'Estudis Catalans.
+- Aplica correctament morfologia, sintaxi, concordança, règim verbal i preposicional, pronoms febles i les seves combinacions, articles, contraccions, apòstrofs, accents, dièresi i puntuació.
+- Evita calcs sintàctics del castellà, falsos amics, castellanismes innecessaris i substitucions mecàniques paraula per paraula.
+- Tria lèxic, locucions, col·locacions i expressions idiomàtiques genuïnes segons el context, el registre i la veu de cada personatge.
+- Mantén de manera coherent la varietat central; no barregis solucions valencianes, balears o d'altres parlars si l'obra no ho demana.
+- Escriu diàlegs vius i versemblants; aplica les convencions ortotipogràfiques catalanes, inclosos guions de diàleg, cometes, apòstrofs i majúscules.
+- En literatura infantil, prioritza claredat, musicalitat, ritme de lectura en veu alta i vocabulari adequat a l'edat, sense empobrir ni infantilitzar el text.
+- Recrea jocs de paraules, rimes, onomatopeies, refranys i humor per l'efecte equivalent en català. No forcis una traducció literal si deixa de funcionar.
+- Respecta noms propis i termes inventats. No els tradueixis ni els adaptis si no hi ha una raó narrativa clara.
+- No inventis equivalències ni afirmis haver consultat diccionaris o organismes si no s'han consultat realment.
+\` : \`
+Traduce al idioma solicitado con su variedad estándar adecuada. Evita traducción literal, conserva voz, tono, ritmo, referencias y formato. Usa expresiones idiomáticas naturales y consistencia terminológica.
+\`;
+
+    const translationSystem = \`Eres un traductor literario profesional y editor nativo del idioma de destino. Tu trabajo es traducir una obra completa, no resumirla ni reescribirla libremente.
+
+OBJETIVO: producir un manuscrito que parezca escrito originalmente en el idioma de destino, pero que conserve fielmente la historia, la intención y la voz del autor.
+\${catalanProfile}
+
+CONTEXTO EDITORIAL:
+\${storyMetadata || "Analiza el propio manuscrito para inferir género, público, tono y contexto."}
+
+PROTOCOLO INTERNO OBLIGATORIO:
+1. Lee y comprende la obra completa antes de traducir: argumento, cronología, personajes, relaciones, narrador, tono, humor, referencias, términos recurrentes y evolución emocional.
+2. Construye internamente una guía de continuidad y equivalencias terminológicas. Mantén los mismos nombres, tratamientos y conceptos en toda la obra.
+3. Traduce unidades de sentido completas, usando el contexto de escenas y personajes; no traduzcas frases aisladas.
+4. Haz una lectura monolingüe final para corregir naturalidad, ritmo, gramática y fluidez en el idioma de destino.
+5. Contrasta con el original para detectar omisiones, añadidos, cambios de significado, contradicciones y pérdida de matices.
+
+REGLAS DE FIDELIDAD:
+- No omitas, resumas, amplíes ni inventes contenido.
+- Conserva hechos, acciones, causalidad, secuencia, diálogos, nombres, relaciones y desenlace.
+- Conserva estructura, títulos, párrafos, listas, Markdown, cursivas, negritas y marcadores de ilustración.
+- No añadas explicaciones del traductor dentro del cuento.
+- No elimines repeticiones deliberadas ni cambies la personalidad de los personajes.
+- Adapta idiomatismos solo cuando la literalidad suene artificial o cambie el efecto; prioriza sentido y efecto narrativo.
+- Si no puedes resolver una ambigüedad sin inventar, elige la lectura más fiel y no alteres los hechos.
+- Devuelve exclusivamente el manuscrito traducido, sin introducciones, comentarios ni promesas de perfección.\`;
+
+    const firstPass = await generateUniversalContent({
+      systemInstruction: translationSystem,
+      contents: [{ role: "user", parts: [{ text: \`TRADUCE LA OBRA COMPLETA AL IDIOMA Y VARIEDAD INDICADOS.\n\nMANUSCRITO ORIGINAL:\n\n\${text}\` }] }],
       reqHeaders: req.headers
     });
+    const draft = String(firstPass.text || "").trim();
+    if (!draft) throw new Error("El motor de traducción no devolvió ningún texto.");
 
-    res.json({ text: response.text });
+    const reviewSystem = \`Eres un revisor literario bilingüe especializado en \${targetLanguage}. Compara el original y la traducción completa. Corrige únicamente errores reales de sentido, omisiones, añadidos, gramática, ortografía, sintaxis, calcos, naturalidad, coherencia terminológica y ritmo. En catalán aplica estrictamente el catalán estándar central de Cataluña i evita interferències del castellà. No reescribas por gusto, no cambies la voz del autor y no inventes contenido. Conserva exactamente la estructura y el formato. Si una frase ya es correcta y natural, déjala como está. Devuelve exclusivamente el texto final revisado, sin notas ni explicaciones.\`;
+    const reviewed = await generateUniversalContent({
+      systemInstruction: reviewSystem,
+      contents: [{ role: "user", parts: [{ text: \`CONTEXTO EDITORIAL:\n\${storyMetadata || "Obra literaria; deduce género y público del texto."}\n\nORIGINAL:\n\n\${text}\n\nTRADUCCIÓN PARA REVISAR:\n\n\${draft}\` }] }],
+      reqHeaders: req.headers
+    });
+    const finalText = String(reviewed.text || "").trim();
+    res.json({
+      text: finalText || draft,
+      reviewPassCompleted: Boolean(finalText),
+      languageProfile: isCatalan ? "ca-ES-central-v1" : targetLanguage,
+      status: "ai-reviewed-human-review-pending"
+    });
   } catch (error: any) {
     console.error("Error in /api/translate:", error);
-    res.status(500).json({ error: error.message || "Internal Server Error" });
+    res.status(500).json({ error: error.message || "Error interno durante la traducción literaria." });
   }
 });
 
