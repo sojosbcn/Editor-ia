@@ -116,3 +116,32 @@ La imposición no modifica el libro maestro. Debe permitir:
 ## 9. Decisiones pendientes de inspección
 
 El repositorio usa React, Vite, TypeScript y servidor Node/Gemini según package.json consultado. Aún debe inspeccionarse la estructura real de componentes, estado, almacenamiento, rutas y despliegue para definir integración, librerías y migraciones. Esta especificación no presupone una arquitectura de carpetas ni un backend que no se haya verificado.
+
+
+## 10. Historial editorial y versionado (requisito obligatorio)
+
+El historial no puede delegarse a Git ni confundirse con el versionado del código. Es información de dominio por cada proyecto de usuario.
+
+### Entidades adicionales propuestas
+
+- `EditorialEvent`: evento append-only con proyecto, actor, acción, fecha UTC, resumen, entidad afectada, versión anterior/nueva, instrucción/procedencia y metadatos no sensibles.
+- `ManuscriptVersion`: snapshot estructurado e inmutable del manuscrito, número/ID de versión, estado, autoría, fecha y hash.
+- `ContentBlock`: capítulo, escena, párrafo u otro bloque con ID estable para comparar cambios granulares.
+- `VersionDiff`: diferencias calculadas entre dos versiones, por bloque; puede materializarse para rendimiento, pero debe poder reconstruirse.
+- `LayoutVersion`: snapshot de la composición visual, independiente de las versiones textuales.
+- `AIActionRecord`: operación de IA con proveedor/modelo, instrucción enviada, parámetros relevantes, alcance, resultado y aceptación/rechazo.
+- `SourceAsset`: archivo original importado y recursos originales con metadatos, ubicación de almacenamiento y hash.
+- `ExportArtifact`: debe referenciar de forma explícita `ManuscriptVersion`, `LayoutVersion`, perfil de salida, versión del motor y hashes de recursos.
+
+### Reglas de persistencia
+
+1. La primera escritura/importación crea un `ManuscriptVersion` original inmutable antes de ejecutar correcciones o normalizaciones.
+2. Toda mutación de contenido crea una nueva versión o un evento recuperable; no se permite actualización destructiva del snapshot.
+3. Los eventos se añaden, no se editan desde el flujo normal de la aplicación.
+4. Los snapshots se combinan con diffs/eventos para equilibrar integridad, rendimiento y almacenamiento.
+5. Restaurar una versión antigua crea una versión nueva basada en su contenido; no mueve el puntero destruyendo el historial.
+6. Las versiones de maqueta nunca mutan versiones textuales.
+7. Cada exportación queda vinculada a las versiones exactas que la originaron.
+8. Guardado, autosave y recuperación deben informar del estado real de persistencia; no confirmar éxito ante un fallo.
+
+La base de datos y la estrategia de almacenamiento se definirán después de inspeccionar el backend real. Se deben probar concurrencia, recuperación ante fallos, integridad de hashes y migración de esquemas.
