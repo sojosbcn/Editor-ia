@@ -10,25 +10,31 @@ Añadir a Editor IA un departamento editorial independiente que transforme manus
 
 El departamento debe servir también para folletos A4, cuadernillos plegados, materiales educativos, revistas y libros para impresión local.
 
-## 2. Principio de producto
+## 2. Principios de producto
 
-**El manuscrito y la maqueta son entidades separadas.** El texto corregido permanece intacto en el proyecto editorial. La maquetación crea una composición derivada con bloques vinculados al contenido. Cambiar tamaño, tipografía, plantilla o distribución no debe reescribir ni perder el original.
+1. **El original nunca se modifica.** Cada cuento conserva su texto inicial íntegro y todas las versiones posteriores.
+2. **Manuscrito y maqueta son entidades separadas.** La composición deriva de una versión concreta del manuscrito; cambiar el diseño no reescribe el texto.
+3. **Toda intervención es trazable.** Debe saberse qué cambió, cuándo, quién o qué lo cambió y con qué instrucción.
+4. **Restaurar no es borrar.** Recuperar un estado anterior crea una versión nueva y conserva el historial posterior.
 
 Flujo principal:
 
-1. Seleccionar proyecto y versión aprobada del manuscrito.
-2. Elegir destino: KDP, impresión local/folleto o lectura digital.
-3. Definir formato, encuadernación, papel, tinta y sangrado.
-4. Elegir plantilla visual y estilos tipográficos.
-5. Distribuir capítulos, texto, ilustraciones, pies, blancos y elementos preliminares/finales.
-6. Revisar páginas en vista individual y enfrentada.
-7. Ejecutar preflight técnico y resolver incidencias.
-8. Exportar PDF de interior, cubierta calculada por separado y paquete de control.
+1. Crear/importar el cuento y guardar una captura original inmutable.
+2. Corregir, analizar y reescribir sobre copias de trabajo versionadas.
+3. Revisar diferencias y aprobar una versión del manuscrito.
+4. Elegir destino: KDP, impresión local/folleto o lectura digital.
+5. Definir formato, encuadernación, papel, tinta y sangrado.
+6. Elegir plantilla visual y estilos tipográficos.
+7. Distribuir capítulos, texto, ilustraciones, pies, blancos y elementos preliminares/finales.
+8. Revisar páginas en vista individual y enfrentada.
+9. Ejecutar preflight técnico y resolver incidencias.
+10. Exportar PDF de interior, cubierta calculada por separado y paquete de control, vinculados a las versiones exactas utilizadas.
 
 ## 3. Departamentos y módulos
 
-- **Proyecto de libro:** metadatos, versiones, idioma, público, colección, ISBN si procede y destino.
-- **Configuración de publicación:** formato, orientación, encuadernación, tinta, papel, sangrado y dirección de lectura.
+- **Proyecto de libro:** metadatos, idioma, público, colección, ISBN si procede y destino.
+- **Historial editorial:** original inmutable, snapshots, eventos, comparación de versiones, aprobación, restauración no destructiva y trazabilidad de IA.
+- **Configuración de publicación:** formato, orientación, encuadernación, papel, tinta, sangrado y dirección de lectura.
 - **Sistema de diseño:** plantillas, retículas, márgenes, columnas, tipografías, jerarquías y estilos reutilizables.
 - **Composición:** páginas, cajas de texto, imágenes, pies, ornamentos y saltos.
 - **Ilustración:** huecos reservados, imágenes finales, página completa, doble página conceptual, media página y colocación libre.
@@ -49,13 +55,7 @@ Exportar cubierta completa (contraportada + lomo + portada) usando la plantilla 
 
 ### C. Impresión local / folleto
 
-Permitir A4 vertical u horizontal, A5, carta y dimensiones personalizadas. Distinguir:
-- página de diseño (por ejemplo, A4 apaisado con dos columnas);
-- página final de lectura (por ejemplo, A5);
-- pliego de impresión (dos páginas colocadas en una hoja);
-- imposición de cuadernillo para plegado y encuadernación.
-
-La imposición se ofrece solo para impresión local. Admitir cuadernillos de 4 páginas por pliego y múltiplos de cuatro, con firmas configurables y páginas blancas automáticas cuando corresponda.
+Permitir A4 vertical u horizontal, A5, carta y dimensiones personalizadas. Distinguir página de diseño, página final de lectura, pliego de impresión e imposición de cuadernillo. La imposición se ofrece solo para impresión local. Admitir cuadernillos de 4 páginas por pliego y múltiplos de cuatro, con firmas configurables y páginas blancas automáticas cuando corresponda.
 
 ### D. Lectura digital
 
@@ -70,15 +70,17 @@ La interfaz debe ofrecer un asistente guiado y después un editor visual:
 - vista de página individual, doble página y pliegos;
 - panel de propiedades del elemento seleccionado;
 - lista de incidencias y estado de preflight;
-- acciones deshacer/rehacer, duplicar, bloquear, alinear y distribuir.
+- acciones deshacer/rehacer, duplicar, bloquear, alinear y distribuir;
+- historial cronológico con comparación y restauración segura.
 
 Debe ser usable en escritorio/tablet. En móvil, priorizar revisión, comentarios y cambios sencillos; no prometer edición de precisión equivalente a escritorio.
 
-## 6. Entregables de esta especificación
+## 6. Documentos de esta especificación
 
 - `requisitos-funcionales.md`: alcance y comportamiento esperado.
 - `formatos-y-kdp.md`: reglas de publicación e impresión.
 - `arquitectura-tecnica.md`: modelo de datos y componentes propuestos.
+- `historial-editorial-versionado.md`: preservación del original, trazabilidad y recuperación de versiones.
 - `preflight-y-pruebas.md`: validaciones y criterios de aceptación.
 - `roadmap.md`: fases y dependencias.
 
