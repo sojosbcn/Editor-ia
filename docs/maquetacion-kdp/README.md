@@ -2,7 +2,6 @@
 
 **Estado:** especificación funcional y técnica — fase de diseño, no implementación.
 **Fecha:** 10 de noviembre de 2026.
-**Rama:** `feature/taller-maquetacion-kdp`.
 
 ## 1. Propósito
 
@@ -16,24 +15,27 @@ El departamento debe servir también para folletos A4, cuadernillos plegados, ma
 2. **Manuscrito y maqueta son entidades separadas.** La composición deriva de una versión concreta del manuscrito; cambiar el diseño no reescribe el texto.
 3. **Toda intervención es trazable.** Debe saberse qué cambió, cuándo, quién o qué lo cambió y con qué instrucción.
 4. **Restaurar no es borrar.** Recuperar un estado anterior crea una versión nueva y conserva el historial posterior.
+5. **Una traducción es otro manuscrito versionado.** Nunca sustituye al original y queda vinculada a la versión exacta desde la que se tradujo.
 
 Flujo principal:
 
 1. Crear/importar el cuento y guardar una captura original inmutable.
 2. Corregir, analizar y reescribir sobre copias de trabajo versionadas.
-3. Revisar diferencias y aprobar una versión del manuscrito.
-4. Elegir destino: KDP, impresión local/folleto o lectura digital.
-5. Definir formato, encuadernación, papel, tinta y sangrado.
-6. Elegir plantilla visual y estilos tipográficos.
-7. Distribuir capítulos, texto, ilustraciones, pies, blancos y elementos preliminares/finales.
-8. Revisar páginas en vista individual y enfrentada.
-9. Ejecutar preflight técnico y resolver incidencias.
-10. Exportar PDF de interior, cubierta calculada por separado y paquete de control, vinculados a las versiones exactas utilizadas.
+3. Traducir, si se desea, desde una versión concreta mediante el módulo de traducción literaria.
+4. Revisar y aprobar la versión lingüística que se va a publicar.
+5. Elegir destino: KDP, impresión local/folleto o lectura digital.
+6. Definir formato, encuadernación, papel, tinta y sangrado.
+7. Elegir plantilla visual y estilos tipográficos.
+8. Distribuir capítulos, texto, ilustraciones, pies, blancos y elementos preliminares/finales.
+9. Revisar páginas en vista individual y enfrentada.
+10. Ejecutar preflight técnico y resolver incidencias.
+11. Exportar PDF de interior, cubierta calculada por separado y paquete de control, vinculados a las versiones exactas utilizadas.
 
 ## 3. Departamentos y módulos
 
 - **Proyecto de libro:** metadatos, idioma, público, colección, ISBN si procede y destino.
 - **Historial editorial:** original inmutable, snapshots, eventos, comparación de versiones, aprobación, restauración no destructiva y trazabilidad de IA.
+- **Traducción literaria:** idioma y variante, contexto completo de la obra, memoria terminológica, traducción por bloques alineados, revisión bilingüe/monolingüe y manuscrito traducido independiente. Primera lengua objetivo: catalán.
 - **Configuración de publicación:** formato, orientación, encuadernación, papel, tinta, sangrado y dirección de lectura.
 - **Sistema de diseño:** plantillas, retículas, márgenes, columnas, tipografías, jerarquías y estilos reutilizables.
 - **Composición:** páginas, cajas de texto, imágenes, pies, ornamentos y saltos.
@@ -71,7 +73,8 @@ La interfaz debe ofrecer un asistente guiado y después un editor visual:
 - panel de propiedades del elemento seleccionado;
 - lista de incidencias y estado de preflight;
 - acciones deshacer/rehacer, duplicar, bloquear, alinear y distribuir;
-- historial cronológico con comparación y restauración segura.
+- historial cronológico con comparación y restauración segura;
+- selección clara de idioma y variante de cada versión del manuscrito.
 
 Debe ser usable en escritorio/tablet. En móvil, priorizar revisión, comentarios y cambios sencillos; no prometer edición de precisión equivalente a escritorio.
 
@@ -83,7 +86,8 @@ Debe ser usable en escritorio/tablet. En móvil, priorizar revisión, comentario
 - `historial-editorial-versionado.md`: preservación del original, trazabilidad y recuperación de versiones.
 - `preflight-y-pruebas.md`: validaciones y criterios de aceptación.
 - `roadmap.md`: fases y dependencias.
+- Traducción literaria: [especificación y perfil lingüístico](../traduccio-literaria/README.md).
 
 ## 7. Límite de esta entrega
 
-Esta rama documenta la especificación. **No incorpora todavía componentes React, motor de paginación, generador PDF ni integración API con KDP.** El repositorio debe inspeccionarse a nivel de código antes de fijar puntos de integración y dependencias. La aprobación técnica de un PDF debe contrastarse siempre con las especificaciones vigentes del producto KDP elegido; ningún validador propio puede garantizar la aceptación de Amazon.
+Esta rama documenta la especificación. **No incorpora todavía componentes React, motor de paginación, generador PDF, traductor funcional ni integración API con KDP.** El repositorio debe inspeccionarse a nivel de código antes de fijar puntos de integración y dependencias. La aprobación técnica de un PDF debe contrastarse siempre con las especificaciones vigentes del producto KDP elegido; ningún validador propio puede garantizar la aceptación de Amazon.

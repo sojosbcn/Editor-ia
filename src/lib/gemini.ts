@@ -121,23 +121,39 @@ export async function runMarketAnalysis(manuscript: string, concept: string): Pr
   return data;
 }
 
-export async function translateText(text: string, targetLanguage: string): Promise<string> {
+export interface TranslationMetadata {
+  title?: string;
+  concept?: string;
+  audience?: string;
+  glossary?: string;
+}
+
+export async function translateText(
+  text: string,
+  targetLanguage: string,
+  metadata: TranslationMetadata = {}
+): Promise<{ text: string; reviewPassCompleted: boolean; languageProfile: string; status: string }> {
   const response = await fetch("/api/translate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       ...getAiConfigHeaders()
     },
-    body: JSON.stringify({ text, targetLanguage }),
+    body: JSON.stringify({ text, targetLanguage, ...metadata }),
   });
 
   if (!response.ok) {
     const errData = await response.json().catch(() => ({}));
-    throw new Error(errData.error || "Fallo en la traducción adaptativa de localización.");
+    throw new Error(errData.error || "Fallo durante la traducción literaria.");
   }
 
   const data = await response.json();
-  return data.text;
+  return {
+    text: data.text,
+    reviewPassCompleted: Boolean(data.reviewPassCompleted),
+    languageProfile: data.languageProfile || targetLanguage,
+    status: data.status || "draft"
+  };
 }
 
 export interface PublishResult {

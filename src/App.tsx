@@ -260,11 +260,13 @@ export default function App() {
   const [isPublishing, setIsPublishing] = useState(false);
 
   // Translation sub-system
-  const [selectedTargetLang, setSelectedTargetLang] = useState("Ingles 🇬🇧");
+  const [selectedTargetLang, setSelectedTargetLang] = useState("Català — estàndard central (Catalunya)");
   const [localizedManuscript, setLocalizedManuscript] = useState(() => {
     return initialProject?.localizedManuscript || "";
   });
   const [isTranslating, setIsTranslating] = useState(false);
+  const [translationHistory, setTranslationHistory] = useState<any[]>(() => initialProject?.translationHistory || []);
+  const [translationGlossary, setTranslationGlossary] = useState<string>(() => initialProject?.translationGlossary || "");
 
   // Corrections desk
   const [isCorrectionsDeskOpen, setIsCorrectionsDeskOpen] = useState(false);
@@ -420,6 +422,8 @@ export default function App() {
     ]);
     setActiveBranchId("main");
     setLocalizedManuscript("");
+    setTranslationHistory([]);
+    setTranslationGlossary("");
     setCmsPublishResult(null);
     setAuditResults({});
     setAiScoreMetric({
@@ -444,6 +448,8 @@ export default function App() {
     ]);
     setActiveBranchId("main");
     setLocalizedManuscript("");
+    setTranslationHistory([]);
+    setTranslationGlossary("");
     setCmsPublishResult(null);
     setAuditResults({});
     setAiScoreMetric({
@@ -481,6 +487,8 @@ export default function App() {
         branches,
         activeBranchId,
         localizedManuscript,
+        translationHistory,
+        translationGlossary,
         correctionsHistory,
         auditResults,
         aiScoreMetric
@@ -498,6 +506,8 @@ export default function App() {
                           JSON.stringify(existing.branches) !== JSON.stringify(branches) ||
                           existing.activeBranchId !== activeBranchId ||
                           existing.localizedManuscript !== localizedManuscript ||
+                          JSON.stringify(existing.translationHistory || []) !== JSON.stringify(translationHistory) ||
+                          existing.translationGlossary !== translationGlossary ||
                           JSON.stringify(existing.correctionsHistory) !== JSON.stringify(correctionsHistory) ||
                           JSON.stringify(existing.auditResults) !== JSON.stringify(auditResults) ||
                           JSON.stringify(existing.aiScoreMetric) !== JSON.stringify(aiScoreMetric);
@@ -507,7 +517,7 @@ export default function App() {
       next[matchIndex] = updatedItem;
       return next;
     });
-  }, [state, branches, activeBranchId, localizedManuscript, correctionsHistory, auditResults, aiScoreMetric]);
+  }, [state, branches, activeBranchId, localizedManuscript, translationHistory, translationGlossary, correctionsHistory, auditResults, aiScoreMetric]);
 
   const createNewProject = () => {
     const newId = `PROJ-${Date.now()}`;
@@ -524,6 +534,8 @@ export default function App() {
     setBranches([{ id: "main", name: "Rama Principal (Master)", content: "" }]);
     setActiveBranchId("main");
     setLocalizedManuscript("");
+    setTranslationHistory([]);
+    setTranslationGlossary("");
     setCmsPublishResult(null);
     setAuditResults({});
     setAiScoreMetric(null);
@@ -559,6 +571,8 @@ export default function App() {
       setBranches([{ id: "main", name: "Rama Principal (Master)", content: "" }]);
       setActiveBranchId("main");
       setLocalizedManuscript("");
+      setTranslationHistory([]);
+    setTranslationGlossary("");
       setCmsPublishResult(null);
       setAuditResults({});
       setAiScoreMetric(null);
@@ -588,6 +602,8 @@ export default function App() {
       }
 
       setLocalizedManuscript(item.localizedManuscript || "");
+      setTranslationHistory(item.translationHistory || []);
+      setTranslationGlossary(item.translationGlossary || "");
       setAuditResults(item.auditResults || {});
       setAiScoreMetric(item.aiScoreMetric || null);
       setCorrectionsHistory(item.correctionsHistory || [
@@ -628,6 +644,8 @@ export default function App() {
               setBranches([{ id: "main", name: "Rama Principal (Master)", content: "" }]);
               setActiveBranchId("main");
               setLocalizedManuscript("");
+              setTranslationHistory([]);
+    setTranslationGlossary("");
               setCmsPublishResult(null);
               setAuditResults({});
               setAiScoreMetric(null);
@@ -982,22 +1000,44 @@ ${currentText.slice(0, 9500)}`;
     }
   };
 
-  // Multi-lingual adaptative translate
+  // Literary translation: keep the source snapshot and every generated translation.
   const handleTranslation = async () => {
     const currentText = branches.find(b => b.id === activeBranchId)?.content || state.humanizedManuscript || "";
     if (!currentText.trim()) {
-      showCustomAlert("Error", "No hay texto para adaptar.");
+      showCustomAlert("Error", "No hay texto para traducir.");
       return;
     }
 
     setIsTranslating(true);
     try {
-      const translated = await translateText(currentText, selectedTargetLang);
+      const result = await translateText(currentText, selectedTargetLang, {
+        title: state.title,
+        concept: state.concept,
+        glossary: translationGlossary
+      });
+      const translated = result.text;
       setLocalizedManuscript(translated);
-      showCustomAlert("Localización Lista", `Se completó la traducción y adaptación adaptativa al ${selectedTargetLang}.`);
+      setTranslationHistory(prev => [{
+        id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `translation-${Date.now()}`,
+        sourceText: currentText,
+        translatedText: translated,
+        sourceLanguage: "es",
+        targetLanguage: selectedTargetLang,
+        languageProfile: result.languageProfile,
+        reviewPassCompleted: result.reviewPassCompleted,
+        status: result.status,
+        sourceBranchId: activeBranchId,
+        createdAt: new Date().toISOString()
+      }, ...prev]);
+      showCustomAlert(
+        "Traducción creada",
+        result.reviewPassCompleted
+          ? "Se ha creado una nueva versión traducida y se ha ejecutado una segunda revisión automática. El original permanece intacto; antes de publicar, recomendamos revisión humana nativa."
+          : "Se ha creado una nueva versión traducida. La segunda revisión automática no pudo completarse; requiere revisión humana antes de publicar."
+      );
     } catch (err: any) {
       console.error(err);
-      showCustomAlert("Error", "No se completó la localización: " + err.message);
+      showCustomAlert("Error", "No se completó la traducción: " + err.message);
     } finally {
       setIsTranslating(false);
     }
@@ -1643,16 +1683,29 @@ ${currentText.slice(0, 9500)}`;
                     {step1SubTab === "translation" && (
                       <div className="space-y-4">
                         <p className="text-[10px] text-[var(--text-dim)] leading-relaxed font-mono">
-                          Reinterpreta tu libro a idiomas globales conservando rítmica, modismos o acentuación literaria mediante adaptación adaptativa de Gemini.
+                          Traducción literaria con análisis global, perfil lingüístico, revisión de fidelidad y conservación de versiones. Primera variedad: catalán estándar central de Cataluña.
                         </p>
                         
+                        <label className="block space-y-1">
+                          <span className="text-[9px] uppercase tracking-wider text-zinc-400 font-mono">Glosario de la colección (opcional)</span>
+                          <textarea
+                            value={translationGlossary}
+                            onChange={(e) => setTranslationGlossary(e.target.value)}
+                            placeholder={"Un término por línea. Ejemplo:\nRatón Pérez = el ratolí Pérez\nNombre inventado = mantener sin traducir"}
+                            rows={3}
+                            className="w-full bg-[var(--bg-surface)] border border-[var(--border)] p-2 rounded text-[10px] text-white outline-none resize-y"
+                          />
+                          <span className="text-[9px] text-zinc-500">Añade nombres, conceptos y equivalencias aprobadas. Se guardan con este proyecto y se aplican en futuras traducciones.</span>
+                        </label>
+
                         <div className="flex items-center gap-2">
                           <select
                             value={selectedTargetLang}
                             onChange={(e) => setSelectedTargetLang(e.target.value)}
                             className="flex-1 bg-[var(--bg-surface)] border border-[var(--border)] p-2 rounded text-xs text-white outline-none"
                           >
-                            <option value="Ingles 🇬🇧">Inglés 🇬🇧</option>
+                            <option value="Català — estàndard central (Catalunya)">Català — estàndard central (Catalunya)</option>
+                          <option value="Ingles 🇬🇧">Inglés 🇬🇧</option>
                             <option value="Frances 🇫🇷">Francés 🇫🇷</option>
                             <option value="Portugues 🇵🇹">Portugués 🇵🇹</option>
                             <option value="Italiano 🇮🇹">Italiano 🇮🇹</option>
@@ -1664,16 +1717,15 @@ ${currentText.slice(0, 9500)}`;
                             disabled={isTranslating}
                             className="bg-[var(--accent)] text-black px-4 py-2 rounded text-[10px] uppercase font-bold tracking-wider hover:bg-[var(--accent-dim)] hover:text-white transition-all font-mono disabled:opacity-45"
                           >
-                            {isTranslating ? "Adaptando..." : "Adaptar"}
+                            {isTranslating ? "Traduciendo y revisando..." : "Traducir historia"}
                           </button>
                         </div>
 
                         {localizedManuscript && (
                           <div className="p-3 bg-neutral-900 border border-[var(--border)] rounded text-xs gap-1">
-                            <p className="text-[8.5px] uppercase tracking-wider text-[var(--accent)] font-bold mb-1">Copia Localizada ({selectedTargetLang})</p>
-                            <div className="text-[10px] italic text-zinc-300 font-serif leading-relaxed line-clamp-4 overflow-y-auto">
-                              {localizedManuscript}
-                            </div>
+                            <p className="text-[8.5px] uppercase tracking-wider text-[var(--accent)] font-bold mb-2">Nueva versión traducida ({selectedTargetLang})</p>
+                            <div className="text-[10px] text-zinc-200 font-serif leading-relaxed whitespace-pre-wrap max-h-80 overflow-y-auto">{localizedManuscript}</div>
+                            <p className="text-[9px] text-zinc-500 mt-2">Historial de traducciones guardadas: {translationHistory.length}. La revisión automática no sustituye una corrección profesional nativa.</p>
                           </div>
                         )}
                       </div>
