@@ -729,7 +729,8 @@ app.post("/api/translate", async (req, res) => {
     const storyMetadata = [
       title ? `Título: ${String(title).slice(0, 300)}` : "",
       concept ? `Concepto editorial: ${String(concept).slice(0, 2000)}` : "",
-      audience ? `Público lector: ${String(audience).slice(0, 300)}` : ""
+      audience ? `Público lector: ${String(audience).slice(0, 300)}` : "",
+      req.body.glossary ? `GLOSARIO APROBADO POR EL EDITOR (respetar estas equivalencias):\n${String(req.body.glossary).slice(0, 6000)}` : ""
     ].filter(Boolean).join("\n");
 
     const catalanProfile = isCatalan ? String.raw`
