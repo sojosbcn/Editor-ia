@@ -565,7 +565,7 @@ export default function App() {
       setBranches([{ id: "main", name: "Rama Principal (Master)", content: "" }]);
       setActiveBranchId("main");
       setLocalizedManuscript("");
-    setTranslationHistory([]);
+      setTranslationHistory([]);
       setCmsPublishResult(null);
       setAuditResults({});
       setAiScoreMetric(null);
@@ -636,7 +636,7 @@ export default function App() {
               setBranches([{ id: "main", name: "Rama Principal (Master)", content: "" }]);
               setActiveBranchId("main");
               setLocalizedManuscript("");
-    setTranslationHistory([]);
+              setTranslationHistory([]);
               setCmsPublishResult(null);
               setAuditResults({});
               setAiScoreMetric(null);
