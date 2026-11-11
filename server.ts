@@ -725,6 +725,18 @@ app.post("/api/translate", async (req, res) => {
       return res.status(413).json({ error: "El manuscrito supera el límite actual de 120.000 caracteres. Divide la obra por capítulos para traducirla conservando el contexto de cada parte." });
     }
 
+    const supportedLanguages = [
+      "Català — estàndard central (Catalunya)",
+      "Ingles 🇬🇧",
+      "Frances 🇫🇷",
+      "Portugues 🇵🇹",
+      "Italiano 🇮🇹",
+      "Aleman 🇩🇪"
+    ];
+    if (!supportedLanguages.includes(targetLanguage)) {
+      return res.status(400).json({ error: "El idioma seleccionado todavía no está habilitado en este módulo." });
+    }
+
     const isCatalan = /catal[aà]|catalan/i.test(targetLanguage);
     const storyMetadata = [
       title ? `Título: ${String(title).slice(0, 300)}` : "",
@@ -782,7 +794,7 @@ REGLAS DE FIDELIDAD:
     const draft = String(firstPass.text || "").trim();
     if (!draft) throw new Error("El motor de traducción no devolvió ningún texto.");
 
-    const reviewSystem = `Eres un revisor literario bilingüe especializado en ${targetLanguage}. Compara el original y la traducción completa. Corrige únicamente errores reales de sentido, omisiones, añadidos, gramática, ortografía, sintaxis, calcos, naturalidad, coherencia terminológica y ritmo. En catalán aplica estrictamente el catalán estándar central de Cataluña i evita interferències del castellà. No reescribas por gusto, no cambies la voz del autor y no inventes contenido. Conserva exactamente la estructura y el formato. Si una frase ya es correcta y natural, déjala como está. Devuelve exclusivamente el texto final revisado, sin notas ni explicaciones.`;
+    const reviewSystem = `Eres un revisor literario bilingüe especializado en ${targetLanguage}. Compara el original y la traducción completa. Corrige únicamente errores reales de sentido, omisiones, añadidos, gramática, ortografía, sintaxis, calcos, naturalidad, coherencia terminológica y ritmo. En catalán aplica estrictamente el catalán estándar central de Cataluña y evita interferencias del castellano. No reescribas por gusto, no cambies la voz del autor y no inventes contenido. Conserva exactamente la estructura y el formato. Si una frase ya es correcta y natural, déjala como está. Devuelve exclusivamente el texto final revisado, sin notas ni explicaciones.`;
     const reviewed = await generateUniversalContent({
       systemInstruction: reviewSystem,
       contents: [{ role: "user", parts: [{ text: `CONTEXTO EDITORIAL:\n${storyMetadata || "Obra literaria; deduce género y público del texto."}\n\nORIGINAL:\n\n${text}\n\nTRADUCCIÓN PARA REVISAR:\n\n${draft}` }] }],
@@ -793,7 +805,7 @@ REGLAS DE FIDELIDAD:
       text: finalText || draft,
       reviewPassCompleted: Boolean(finalText),
       languageProfile: isCatalan ? "ca-ES-central-v1" : targetLanguage,
-      status: "ai-reviewed-human-review-pending"
+      status: finalText ? "ai-reviewed-human-review-pending" : "draft-human-review-required"
     });
   } catch (error: any) {
     console.error("Error in /api/translate:", error);
