@@ -112,7 +112,7 @@ async function generateUniversalContent(params: {
     let finalSystemInstruction = params.systemInstruction || "";
     
     if (jsonMode && params.responseSchema) {
-      finalSystemInstruction += `\n\nCRITICAL: You must return a valid JSON object. Do not include markdown formatting like \`\`\`json or any conversational prefix/suffix. The JSON must match this structure:\n${JSON.stringify(params.responseSchema, null, 2)}`;
+      finalSystemInstruction += `\n\nCRITICAL: You must return a valid JSON object. Do not include markdown formatting like ```json or any conversational prefix/suffix. The JSON must match this structure:\n${JSON.stringify(params.responseSchema, null, 2)}`;
     }
     
     const messages = formatGeminiContentsToGroq(params.contents, finalSystemInstruction);
@@ -727,12 +727,12 @@ app.post("/api/translate", async (req, res) => {
 
     const isCatalan = /catal[aà]|catalan/i.test(targetLanguage);
     const storyMetadata = [
-      title ? \`Título: \${String(title).slice(0, 300)}\` : "",
-      concept ? \`Concepto editorial: \${String(concept).slice(0, 2000)}\` : "",
-      audience ? \`Público lector: \${String(audience).slice(0, 300)}\` : ""
+      title ? `Título: ${String(title).slice(0, 300)}` : "",
+      concept ? `Concepto editorial: ${String(concept).slice(0, 2000)}` : "",
+      audience ? `Público lector: ${String(audience).slice(0, 300)}` : ""
     ].filter(Boolean).join("\n");
 
-    const catalanProfile = isCatalan ? String.raw\`
+    const catalanProfile = isCatalan ? String.raw`
 PERFIL LINGÜÍSTICO OBLIGATORIO — CATALÀ ESTÀNDARD CENTRAL DE CATALUNYA
 - Escriu en català normatiu actual, natural i literari, prenent com a referència general la normativa de l'Institut d'Estudis Catalans.
 - Aplica correctament morfologia, sintaxi, concordança, règim verbal i preposicional, pronoms febles i les seves combinacions, articles, contraccions, apòstrofs, accents, dièresi i puntuació.
@@ -744,17 +744,17 @@ PERFIL LINGÜÍSTICO OBLIGATORIO — CATALÀ ESTÀNDARD CENTRAL DE CATALUNYA
 - Recrea jocs de paraules, rimes, onomatopeies, refranys i humor per l'efecte equivalent en català. No forcis una traducció literal si deixa de funcionar.
 - Respecta noms propis i termes inventats. No els tradueixis ni els adaptis si no hi ha una raó narrativa clara.
 - No inventis equivalències ni afirmis haver consultat diccionaris o organismes si no s'han consultat realment.
-\` : \`
+` : `
 Traduce al idioma solicitado con su variedad estándar adecuada. Evita traducción literal, conserva voz, tono, ritmo, referencias y formato. Usa expresiones idiomáticas naturales y consistencia terminológica.
-\`;
+`;
 
-    const translationSystem = \`Eres un traductor literario profesional y editor nativo del idioma de destino. Tu trabajo es traducir una obra completa, no resumirla ni reescribirla libremente.
+    const translationSystem = `Eres un traductor literario profesional y editor nativo del idioma de destino. Tu trabajo es traducir una obra completa, no resumirla ni reescribirla libremente.
 
 OBJETIVO: producir un manuscrito que parezca escrito originalmente en el idioma de destino, pero que conserve fielmente la historia, la intención y la voz del autor.
-\${catalanProfile}
+${catalanProfile}
 
 CONTEXTO EDITORIAL:
-\${storyMetadata || "Analiza el propio manuscrito para inferir género, público, tono y contexto."}
+${storyMetadata || "Analiza el propio manuscrito para inferir género, público, tono y contexto."}
 
 PROTOCOLO INTERNO OBLIGATORIO:
 1. Lee y comprende la obra completa antes de traducir: argumento, cronología, personajes, relaciones, narrador, tono, humor, referencias, términos recurrentes y evolución emocional.
@@ -771,20 +771,20 @@ REGLAS DE FIDELIDAD:
 - No elimines repeticiones deliberadas ni cambies la personalidad de los personajes.
 - Adapta idiomatismos solo cuando la literalidad suene artificial o cambie el efecto; prioriza sentido y efecto narrativo.
 - Si no puedes resolver una ambigüedad sin inventar, elige la lectura más fiel y no alteres los hechos.
-- Devuelve exclusivamente el manuscrito traducido, sin introducciones, comentarios ni promesas de perfección.\`;
+- Devuelve exclusivamente el manuscrito traducido, sin introducciones, comentarios ni promesas de perfección.`;
 
     const firstPass = await generateUniversalContent({
       systemInstruction: translationSystem,
-      contents: [{ role: "user", parts: [{ text: \`TRADUCE LA OBRA COMPLETA AL IDIOMA Y VARIEDAD INDICADOS.\n\nMANUSCRITO ORIGINAL:\n\n\${text}\` }] }],
+      contents: [{ role: "user", parts: [{ text: `TRADUCE LA OBRA COMPLETA AL IDIOMA Y VARIEDAD INDICADOS.\n\nMANUSCRITO ORIGINAL:\n\n${text}` }] }],
       reqHeaders: req.headers
     });
     const draft = String(firstPass.text || "").trim();
     if (!draft) throw new Error("El motor de traducción no devolvió ningún texto.");
 
-    const reviewSystem = \`Eres un revisor literario bilingüe especializado en \${targetLanguage}. Compara el original y la traducción completa. Corrige únicamente errores reales de sentido, omisiones, añadidos, gramática, ortografía, sintaxis, calcos, naturalidad, coherencia terminológica y ritmo. En catalán aplica estrictamente el catalán estándar central de Cataluña i evita interferències del castellà. No reescribas por gusto, no cambies la voz del autor y no inventes contenido. Conserva exactamente la estructura y el formato. Si una frase ya es correcta y natural, déjala como está. Devuelve exclusivamente el texto final revisado, sin notas ni explicaciones.\`;
+    const reviewSystem = `Eres un revisor literario bilingüe especializado en ${targetLanguage}. Compara el original y la traducción completa. Corrige únicamente errores reales de sentido, omisiones, añadidos, gramática, ortografía, sintaxis, calcos, naturalidad, coherencia terminológica y ritmo. En catalán aplica estrictamente el catalán estándar central de Cataluña i evita interferències del castellà. No reescribas por gusto, no cambies la voz del autor y no inventes contenido. Conserva exactamente la estructura y el formato. Si una frase ya es correcta y natural, déjala como está. Devuelve exclusivamente el texto final revisado, sin notas ni explicaciones.`;
     const reviewed = await generateUniversalContent({
       systemInstruction: reviewSystem,
-      contents: [{ role: "user", parts: [{ text: \`CONTEXTO EDITORIAL:\n\${storyMetadata || "Obra literaria; deduce género y público del texto."}\n\nORIGINAL:\n\n\${text}\n\nTRADUCCIÓN PARA REVISAR:\n\n\${draft}\` }] }],
+      contents: [{ role: "user", parts: [{ text: `CONTEXTO EDITORIAL:\n${storyMetadata || "Obra literaria; deduce género y público del texto."}\n\nORIGINAL:\n\n${text}\n\nTRADUCCIÓN PARA REVISAR:\n\n${draft}` }] }],
       reqHeaders: req.headers
     });
     const finalText = String(reviewed.text || "").trim();
