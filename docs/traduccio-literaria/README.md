@@ -1,6 +1,6 @@
 # Módulo de Traducción Literaria — Catalán
 
-**Estado:** especificación funcional y lingüística; todavía no implementado.
+**Estado:** especificación completa y primer prototipo integrado en frontend/backend. Pendiente de compilación, pruebas lingüísticas y persistencia de producción.
 **Rama:** `feature/traduccio-literaria-catala`.
 **Primera combinación:** español → catalán estándar central (Cataluña), con variante configurable en el diseño para futuras ampliaciones.
 
@@ -29,6 +29,7 @@ La traducción se tratará como una **adaptación lingüística fiel**, no como 
 - `perfil-linguistico-catala.md`: conocimiento lingüístico y decisiones normativas iniciales.
 - `arquitectura-y-memoria.md`: contexto, glosario, memoria de traducción y versionado.
 - `evaluacion-calidad.md`: pruebas, métricas y revisión humana.
+- `implementacion-mvp.md`: cambios de código realizados, límites conocidos y pruebas pendientes.
 
 ## Qué significa «conocer el idioma»
 
@@ -41,6 +42,10 @@ No se pretende almacenar una supuesta copia completa del catalán ni confiar en 
 - controles automáticos y revisión humana en casos sensibles.
 
 La documentación lingüística debe poder actualizarse sin reescribir el motor. Las fuentes externas se consultarán respetando sus licencias y condiciones de uso.
+
+## Estado del prototipo actual
+
+La rama ya incorpora una primera implementación del flujo de traducción: catalán como idioma predeterminado, perfil lingüístico específico, dos pasadas de IA, glosario manual por proyecto e historial local de resultados. No existe todavía consulta automática a diccionarios, memoria compartida de colección ni almacenamiento editorial de producción. Consulta [implementación MVP y límites](./implementacion-mvp.md).
 
 ## Alcance inicial
 
