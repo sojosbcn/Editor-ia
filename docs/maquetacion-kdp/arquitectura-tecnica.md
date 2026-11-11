@@ -12,6 +12,7 @@
 6. Preflight como servicio separado del renderizado.
 7. Versionado de maquetas y recursos.
 8. Exportaciones reproducibles y trazables.
+9. Traducciones como manuscritos independientes, nunca como sustituciones del original.
 
 ## 2. Modelo de dominio sugerido
 
@@ -51,6 +52,7 @@
 - Renderizador PDF.
 - Validador/preflight.
 - Gestor de versiones y artefactos.
+- Servicio de traducción literaria, separado del motor de maquetación.
 
 ### Persistencia
 Guardar estructura y configuración como datos versionables; almacenar imágenes y PDFs como recursos, no como cadenas embebidas en el documento. Mantener referencias estables y hashes para detectar cambios.
@@ -117,7 +119,6 @@ La imposición no modifica el libro maestro. Debe permitir:
 
 El repositorio usa React, Vite, TypeScript y servidor Node/Gemini según package.json consultado. Aún debe inspeccionarse la estructura real de componentes, estado, almacenamiento, rutas y despliegue para definir integración, librerías y migraciones. Esta especificación no presupone una arquitectura de carpetas ni un backend que no se haya verificado.
 
-
 ## 10. Historial editorial y versionado (requisito obligatorio)
 
 El historial no puede delegarse a Git ni confundirse con el versionado del código. Es información de dominio por cada proyecto de usuario.
@@ -145,3 +146,22 @@ El historial no puede delegarse a Git ni confundirse con el versionado del códi
 8. Guardado, autosave y recuperación deben informar del estado real de persistencia; no confirmar éxito ante un fallo.
 
 La base de datos y la estrategia de almacenamiento se definirán después de inspeccionar el backend real. Se deben probar concurrencia, recuperación ante fallos, integridad de hashes y migración de esquemas.
+
+## 11. Traducción literaria y memoria lingüística
+
+La traducción constituye un servicio de dominio propio. Debe consumir una versión inmutable del manuscrito y producir otra versión independiente, vinculada a la fuente.
+
+Entidades específicas propuestas:
+- `TranslationJob`: idiomas, variedad, perfil, versión de origen y estado.
+- `StoryContext`: argumento, personajes, cronología, voz narrativa, tono y público.
+- `GlossaryEntry`: términos y equivalencias aprobadas con contexto y alcance.
+- `TranslationMemoryEntry`: segmentos aprobados y contextualizados.
+- `LanguageProfileVersion`: normativa, guía de estilo, fuentes y variedad.
+- `TranslatedManuscriptVersion`: snapshot traducido vinculado a la versión original.
+- `TranslationIssue`: dudas de sentido, naturalidad, gramática, terminología y continuidad.
+
+La recuperación de contexto se organiza por capas: perfil lingüístico fijo, contexto global del libro, memoria de colección, contexto local del segmento y fuentes de consulta. La traducción debe poder ejecutarse por bloques sin perder contexto global ni continuidad.
+
+La variante de destino inicial es catalán estándar central de Cataluña. El perfil, glosario y memoria usados quedan versionados. La traducción no cambia el original ni se incorpora automáticamente como memoria aprobada: solo las decisiones aceptadas por el editor se reutilizan.
+
+El detalle funcional y lingüístico está en [docs/traduccio-literaria](../traduccio-literaria/README.md). La paginación debe recalcularse para el idioma traducido; no se deben heredar ciegamente saltos de página del manuscrito de origen.
