@@ -125,6 +125,7 @@ export interface TranslationMetadata {
   title?: string;
   concept?: string;
   audience?: string;
+  glossary?: string;
 }
 
 export async function translateText(
