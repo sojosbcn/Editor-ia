@@ -266,6 +266,7 @@ export default function App() {
   });
   const [isTranslating, setIsTranslating] = useState(false);
   const [translationHistory, setTranslationHistory] = useState<any[]>(() => initialProject?.translationHistory || []);
+  const [translationGlossary, setTranslationGlossary] = useState<string>(() => initialProject?.translationGlossary || "");
 
   // Corrections desk
   const [isCorrectionsDeskOpen, setIsCorrectionsDeskOpen] = useState(false);
@@ -422,6 +423,7 @@ export default function App() {
     setActiveBranchId("main");
     setLocalizedManuscript("");
     setTranslationHistory([]);
+    setTranslationGlossary("");
     setCmsPublishResult(null);
     setAuditResults({});
     setAiScoreMetric({
@@ -447,6 +449,7 @@ export default function App() {
     setActiveBranchId("main");
     setLocalizedManuscript("");
     setTranslationHistory([]);
+    setTranslationGlossary("");
     setCmsPublishResult(null);
     setAuditResults({});
     setAiScoreMetric({
@@ -485,6 +488,7 @@ export default function App() {
         activeBranchId,
         localizedManuscript,
         translationHistory,
+        translationGlossary,
         correctionsHistory,
         auditResults,
         aiScoreMetric
@@ -503,6 +507,7 @@ export default function App() {
                           existing.activeBranchId !== activeBranchId ||
                           existing.localizedManuscript !== localizedManuscript ||
                           JSON.stringify(existing.translationHistory || []) !== JSON.stringify(translationHistory) ||
+                          existing.translationGlossary !== translationGlossary ||
                           JSON.stringify(existing.correctionsHistory) !== JSON.stringify(correctionsHistory) ||
                           JSON.stringify(existing.auditResults) !== JSON.stringify(auditResults) ||
                           JSON.stringify(existing.aiScoreMetric) !== JSON.stringify(aiScoreMetric);
@@ -512,7 +517,7 @@ export default function App() {
       next[matchIndex] = updatedItem;
       return next;
     });
-  }, [state, branches, activeBranchId, localizedManuscript, translationHistory, correctionsHistory, auditResults, aiScoreMetric]);
+  }, [state, branches, activeBranchId, localizedManuscript, translationHistory, translationGlossary, correctionsHistory, auditResults, aiScoreMetric]);
 
   const createNewProject = () => {
     const newId = `PROJ-${Date.now()}`;
@@ -530,6 +535,7 @@ export default function App() {
     setActiveBranchId("main");
     setLocalizedManuscript("");
     setTranslationHistory([]);
+    setTranslationGlossary("");
     setCmsPublishResult(null);
     setAuditResults({});
     setAiScoreMetric(null);
@@ -566,6 +572,7 @@ export default function App() {
       setActiveBranchId("main");
       setLocalizedManuscript("");
       setTranslationHistory([]);
+    setTranslationGlossary("");
       setCmsPublishResult(null);
       setAuditResults({});
       setAiScoreMetric(null);
@@ -596,6 +603,7 @@ export default function App() {
 
       setLocalizedManuscript(item.localizedManuscript || "");
       setTranslationHistory(item.translationHistory || []);
+      setTranslationGlossary(item.translationGlossary || "");
       setAuditResults(item.auditResults || {});
       setAiScoreMetric(item.aiScoreMetric || null);
       setCorrectionsHistory(item.correctionsHistory || [
@@ -637,6 +645,7 @@ export default function App() {
               setActiveBranchId("main");
               setLocalizedManuscript("");
               setTranslationHistory([]);
+    setTranslationGlossary("");
               setCmsPublishResult(null);
               setAuditResults({});
               setAiScoreMetric(null);
@@ -1004,7 +1013,7 @@ ${currentText.slice(0, 9500)}`;
       const result = await translateText(currentText, selectedTargetLang, {
         title: state.title,
         concept: state.concept,
-        audience: "Público lector infantil o juvenil según el contenido del manuscrito"
+        glossary: translationGlossary
       });
       const translated = result.text;
       setLocalizedManuscript(translated);
@@ -1677,6 +1686,18 @@ ${currentText.slice(0, 9500)}`;
                           Traducción literaria con análisis global, perfil lingüístico, revisión de fidelidad y conservación de versiones. Primera variedad: catalán estándar central de Cataluña.
                         </p>
                         
+                        <label className="block space-y-1">
+                          <span className="text-[9px] uppercase tracking-wider text-zinc-400 font-mono">Glosario de la colección (opcional)</span>
+                          <textarea
+                            value={translationGlossary}
+                            onChange={(e) => setTranslationGlossary(e.target.value)}
+                            placeholder={"Un término por línea. Ejemplo:\nRatón Pérez = el ratolí Pérez\nNombre inventado = mantener sin traducir"}
+                            rows={3}
+                            className="w-full bg-[var(--bg-surface)] border border-[var(--border)] p-2 rounded text-[10px] text-white outline-none resize-y"
+                          />
+                          <span className="text-[9px] text-zinc-500">Añade nombres, conceptos y equivalencias aprobadas. Se guardan con este proyecto y se aplican en futuras traducciones.</span>
+                        </label>
+
                         <div className="flex items-center gap-2">
                           <select
                             value={selectedTargetLang}
