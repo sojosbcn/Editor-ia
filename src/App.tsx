@@ -254,8 +254,7 @@ export default function App() {
 
   // Search grounding
   const [searchGroundingEnabled, setSearchGroundingEnabled] = useState(false);
-  const [webhookUrl, setWebhookUrl] = useState("https://api.webflow.com/v1/aura-publish-webhook");
-  const [selectedPlatform, setSelectedPlatform] = useState("WordPress");
+    const [selectedPlatform, setSelectedPlatform] = useState("WordPress");
   const [cmsPublishResult, setCmsPublishResult] = useState<any | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
 
@@ -1010,7 +1009,7 @@ ${currentText.slice(0, 9500)}`;
     
     setIsPublishing(true);
     try {
-      const res = await publishToCMS(state.title, currentText, webhookUrl, selectedPlatform);
+      const res = await publishToCMS(state.title, currentText, selectedPlatform);
       setCmsPublishResult(res);
       showCustomAlert("Solicitud enviada", res.realCallStatus || "El CMS ha aceptado la solicitud.");
     } catch (err: any) {
