@@ -151,9 +151,8 @@ export interface PublishResult {
 }
 
 export async function publishToCMS(
-  title: string, 
-  content: string, 
-  webhookUrl: string, 
+  title: string,
+  content: string,
   platform: string
 ): Promise<PublishResult> {
   const response = await fetch("/api/publish-cms", {
