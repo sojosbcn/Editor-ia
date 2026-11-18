@@ -147,13 +147,12 @@ export interface PublishResult {
   realCallStatus: string;
   publishDate: string;
   slug: string;
-  publicUrl: string;
+  publicUrl: string | null;
 }
 
 export async function publishToCMS(
-  title: string, 
-  content: string, 
-  webhookUrl: string, 
+  title: string,
+  content: string,
   platform: string
 ): Promise<PublishResult> {
   const response = await fetch("/api/publish-cms", {
@@ -162,7 +161,7 @@ export async function publishToCMS(
       "Content-Type": "application/json",
       // No custom headers needed since this is a pure utility CMS request (non-AI)
     },
-    body: JSON.stringify({ title, content, webhookUrl, platform }),
+    body: JSON.stringify({ title, content, platform }),
   });
 
   if (!response.ok) {

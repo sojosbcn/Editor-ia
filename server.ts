@@ -207,7 +207,74 @@ const DEPARTMENTS = {
   MARKET: 'Estrategas de Nicho y Palabras Clave KDP'
 };
 
-app.use(express.json({ limit: "50mb" }));
+app.disable("x-powered-by");
+
+// Defensive response headers. The frontend uses inline styles and Vite assets,
+// so CSP is intentionally left to deployment-specific configuration.
+app.use((_req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  next();
+});
+
+// In-memory per-instance limits. Do not trust X-Forwarded-For unless the
+// deployment explicitly configures a trusted proxy topology.
+function createRateLimiter(limit: number, windowMs: number) {
+  const buckets = new Map<string, { count: number; resetAt: number }>();
+  let checks = 0;
+
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const now = Date.now();
+    const key = req.ip || req.socket.remoteAddress || "unknown";
+    let bucket = buckets.get(key);
+
+    if (!bucket || bucket.resetAt <= now) {
+      bucket = { count: 0, resetAt: now + windowMs };
+      buckets.set(key, bucket);
+    }
+
+    bucket.count += 1;
+    checks += 1;
+    if (checks % 500 === 0) {
+      for (const [entryKey, entry] of buckets) {
+        if (entry.resetAt <= now) buckets.delete(entryKey);
+      }
+    }
+
+    if (bucket.count > limit) {
+      res.setHeader("Retry-After", String(Math.ceil((bucket.resetAt - now) / 1000)));
+      return res.status(429).json({ error: "Demasiadas solicitudes. Espera un momento antes de volver a intentarlo." });
+    }
+
+    next();
+  };
+}
+
+app.use(express.json({ limit: "12mb" }));
+app.use("/api", createRateLimiter(180, 60_000));
+app.use("/api", (req, res, next) => {
+  const isAiRequest = req.method === "POST" && req.path !== "/publish-cms";
+  if (!isAiRequest) return next();
+  return createAiRateLimiter(req, res, next);
+});
+
+const aiRateLimit = createRateLimiter(30, 60_000);
+function createAiRateLimiter(req: express.Request, res: express.Response, next: express.NextFunction) {
+  return aiRateLimit(req, res, next);
+}
+
+app.get("/api/health", (_req, res) => {
+  res.json({
+    status: "ok",
+    services: {
+      geminiConfigured: Boolean(process.env.GEMINI_API_KEY),
+      groqConfigured: Boolean(process.env.GROQ_API_KEY),
+      cmsConfigured: Boolean(process.env.CMS_WEBHOOK_URL && process.env.CMS_WEBHOOK_ALLOWED_HOSTS)
+    }
+  });
+});
 
 // Endpoint for Editor-In-Chief Conversational Thread
 app.post("/api/editor-in-chief", async (req, res) => {
@@ -739,51 +806,98 @@ CRITICAL: Maintain the exact feeling, rhythm, emotion, tone, and formatting of t
   }
 });
 
-// Endpoint for Web Publishing and CMS Distribution (WordPress / Webflow Integration Simulation)
+// Endpoint for server-configured CMS publishing.
+// Never accept a destination URL from the browser: that creates an SSRF primitive.
 app.post("/api/publish-cms", async (req, res) => {
   try {
-    const { title, content, webhookUrl, platform } = req.body;
-    if (!title || !content) {
-      return res.status(400).json({ error: "Missing title or content parameter" });
+    const { title, content, platform } = req.body || {};
+    if (typeof title !== "string" || !title.trim() ||
+        typeof content !== "string" || !content.trim()) {
+      return res.status(400).json({ error: "Se requieren un título y un manuscrito válidos." });
+    }
+    if (title.length > 300 || content.length > 8_000_000) {
+      return res.status(413).json({ error: "El título o el manuscrito supera el tamaño permitido." });
     }
 
-    let realCallStatus = "No se ha proporcionado webhook de producción.";
-    if (webhookUrl && webhookUrl.startsWith("http")) {
-      try {
-        const fetchRes = await fetch(webhookUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title,
-            body: content,
-            status: "draft",
-            platform: platform || "WordPress"
-          }),
-          signal: AbortSignal.timeout(4000) // 4 seconds timeout
-        });
-        realCallStatus = `Conexión exitosa. El servidor de ${platform || "WordPress"} respondió con código de estado HTTP: ${fetchRes.status}`;
-      } catch (err: any) {
-        realCallStatus = `Intento de conexión del webhook devuelto con error de red local: ${err.message}`;
-      }
+    const configuredUrl = process.env.CMS_WEBHOOK_URL;
+    const allowedHosts = (process.env.CMS_WEBHOOK_ALLOWED_HOSTS || "")
+      .split(",").map((host) => host.trim().toLowerCase()).filter(Boolean);
+
+    if (!configuredUrl || allowedHosts.length === 0) {
+      return res.status(503).json({
+        success: false,
+        status: "NO_CONFIGURADO",
+        error: "La publicación CMS no está configurada. Define CMS_WEBHOOK_URL y CMS_WEBHOOK_ALLOWED_HOSTS en los secretos del servidor."
+      });
+    }
+
+    let target: URL;
+    try {
+      target = new URL(configuredUrl);
+    } catch {
+      return res.status(503).json({ success: false, error: "CMS_WEBHOOK_URL no es una URL válida." });
+    }
+
+    const hostname = target.hostname.replace(/^\[|\]$/g, "").toLowerCase();
+    if (
+      target.protocol !== "https:" ||
+      target.username ||
+      target.password ||
+      target.port && target.port !== "443" ||
+      !allowedHosts.includes(hostname) ||
+      hostname === "localhost" ||
+      hostname.endsWith(".localhost") ||
+      hostname.endsWith(".local")
+    ) {
+      return res.status(503).json({
+        success: false,
+        error: "El destino CMS no cumple la política de seguridad. Se requiere HTTPS y un dominio incluido exactamente en CMS_WEBHOOK_ALLOWED_HOSTS."
+      });
+    }
+
+    const response = await fetch(target.toString(), {
+      method: "POST",
+      redirect: "error",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({
+        title: title.trim(),
+        body: content,
+        status: "draft",
+        platform: typeof platform === "string" ? platform.slice(0, 40) : "WordPress"
+      }),
+      signal: AbortSignal.timeout(10_000)
+    });
+
+    if (!response.ok) {
+      console.error("[CMS] El proveedor respondió con HTTP", response.status);
+      return res.status(502).json({
+        success: false,
+        status: "ERROR_DEL_PROVEEDOR",
+        error: `El CMS rechazó la solicitud (HTTP ${response.status}). No se ha confirmado la creación del borrador.`
+      });
     }
 
     const slug = title.toLowerCase().trim()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove accents
-      .replace(/[^a-z0-9]+/g, "-") // non alphanumeric mapping
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)+/g, "");
 
-    res.json({
+    return res.json({
       success: true,
-      platform: platform || "WordPress",
-      status: "PUBLICADO EN ESTADO DE BORRADOR",
-      realCallStatus,
-      publishDate: new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      platform: typeof platform === "string" ? platform : "WordPress",
+      status: "BORRADOR_ENVIADO_AL_CMS",
+      realCallStatus: `El CMS ha aceptado la solicitud (HTTP ${response.status}). Verifica el borrador en el panel del proveedor.`,
+      publishDate: new Date().toISOString(),
       slug,
-      publicUrl: `https://${(platform || "WordPress").toLowerCase()}.prensa-aura.com/borradores/${slug}`
+      publicUrl: null
     });
   } catch (error: any) {
-    console.error("Error in /api/publish-cms:", error);
-    res.status(500).json({ error: error.message || "Internal Server Error" });
+    console.error("[CMS] Error de publicación:", error?.message || error);
+    return res.status(502).json({
+      success: false,
+      status: "ERROR_DE_CONEXION",
+      error: "No se pudo confirmar la recepción de la solicitud por el CMS. Comprueba la configuración y vuelve a intentarlo."
+    });
   }
 });
 

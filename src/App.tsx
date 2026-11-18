@@ -254,8 +254,7 @@ export default function App() {
 
   // Search grounding
   const [searchGroundingEnabled, setSearchGroundingEnabled] = useState(false);
-  const [webhookUrl, setWebhookUrl] = useState("https://api.webflow.com/v1/aura-publish-webhook");
-  const [selectedPlatform, setSelectedPlatform] = useState("WordPress");
+    const [selectedPlatform, setSelectedPlatform] = useState("WordPress");
   const [cmsPublishResult, setCmsPublishResult] = useState<any | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
 
@@ -1010,9 +1009,9 @@ ${currentText.slice(0, 9500)}`;
     
     setIsPublishing(true);
     try {
-      const res = await publishToCMS(state.title, currentText, webhookUrl, selectedPlatform);
+      const res = await publishToCMS(state.title, currentText, selectedPlatform);
       setCmsPublishResult(res);
-      showCustomAlert("Desplegado", `Suscripción enviada del manuscrito de forma exitosa a tu portal.`);
+      showCustomAlert("Solicitud enviada", res.realCallStatus || "El CMS ha aceptado la solicitud.");
     } catch (err: any) {
       console.error(err);
       showCustomAlert("Error", "Error publicando: " + err.message);
@@ -2897,12 +2896,12 @@ ${currentText.slice(0, 9500)}`;
                         <option value="Ghost">Ghost CMS</option>
                         <option value="Medium">Medium</option>
                       </select>
-                      <input 
+                      <input
                         type="text"
-                        value={webhookUrl}
-                        onChange={(e) => setWebhookUrl(e.target.value)}
-                        placeholder="Webhook API Token / URL"
-                        className="flex-1 bg-[var(--bg-surface)] border border-[var(--border)] px-3 py-2 text-xs text-white outline-none rounded"
+                        value="Webhook seguro configurado desde el servidor"
+                        readOnly
+                        aria-label="Configuración del webhook CMS"
+                        className="flex-1 bg-[var(--bg-surface)] border border-[var(--border)] px-3 py-2 text-xs text-zinc-400 outline-none rounded cursor-not-allowed"
                       />
                     </div>
 
@@ -2915,9 +2914,12 @@ ${currentText.slice(0, 9500)}`;
                     </button>
 
                     {cmsPublishResult && (
-                      <div className="p-3 bg-emerald-950/20 border border-emerald-500/20 text-[9px] font-mono leading-relaxed rounded text-zinc-300">
-                        <span className="text-emerald-400 font-bold uppercase block mb-1">✓ Despliegue Exitoso: {cmsPublishResult.status}</span>
-                        <p className="truncate">Public Link: <a href={cmsPublishResult.publicUrl} target="_blank" rel="noopener noreferrer" className="underline font-bold text-[var(--accent)] hover:text-white">{cmsPublishResult.publicUrl}</a></p>
+                      <div className="p-3 bg-[var(--bg-surface)] border border-[var(--border)] text-[9px] font-mono leading-relaxed rounded text-zinc-300">
+                        <span className="font-bold uppercase block mb-1">{cmsPublishResult.success ? "✓ CMS: " : "⚠ CMS: "}{cmsPublishResult.status}</span>
+                        <p>{cmsPublishResult.realCallStatus}</p>
+                        {cmsPublishResult.publicUrl && (
+                          <p className="truncate mt-1">Enlace: <a href={cmsPublishResult.publicUrl} target="_blank" rel="noopener noreferrer" className="underline font-bold text-[var(--accent)] hover:text-white">{cmsPublishResult.publicUrl}</a></p>
+                        )}
                       </div>
                     )}
                   </div>
